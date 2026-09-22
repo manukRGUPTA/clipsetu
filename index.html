@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153a35">
+  <title>Clipsetu — clipping campaigns, made accountable</title>
+  <style>
+    :root{--ink:#142321;--muted:#687673;--line:#e4eae6;--canvas:#f5f7f5;--paper:#fff;--forest:#153a35;--forest-2:#214f47;--lime:#d7f36a;--lime-dark:#adc943;--teal:#dcefe9;--amber:#f2b85b;--amber-bg:#fff5df;--red:#bd554b;--red-bg:#fff0ee;--green:#237354;--green-bg:#e7f5ed;--blue:#5579a5;--shadow:0 18px 55px rgba(14,35,30,.12);--radius:16px;--sidebar:250px}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--canvas)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    .shell{min-height:100vh;display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr)}
+    .sidebar{position:sticky;top:0;height:100vh;background:var(--forest);color:#eef7f3;padding:22px 15px 18px;display:flex;flex-direction:column;z-index:10}
+    .brand{display:flex;align-items:center;gap:11px;padding:2px 11px 23px}
+    .brand-mark{width:35px;height:35px;display:grid;place-items:center;background:var(--lime);border-radius:11px;color:var(--forest);font-weight:900;font-size:18px;letter-spacing:-2px}
+    .brand-name{font-weight:760;font-size:18px;letter-spacing:-.45px}
+    .brand-sub{font-size:10px;color:#a9c4bc;margin-top:3px;letter-spacing:.1em;text-transform:uppercase}
+    .workspace-tag{margin:0 8px 22px;border:1px solid rgba(224,242,233,.13);border-radius:11px;padding:11px 12px;background:rgba(255,255,255,.045)}
+    .workspace-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.11em;color:#a6c7bc}
+    .workspace-name{font-size:12px;font-weight:650;margin-top:5px}
+    .nav-label{padding:0 13px 7px;font-size:10px;letter-spacing:.13em;color:#91b1a6;text-transform:uppercase}
+    .nav{display:grid;gap:4px}
+    .nav button{display:flex;align-items:center;gap:12px;border:0;background:transparent;color:#c4d9d2;text-align:left;padding:10px 13px;border-radius:10px;font-size:13px;font-weight:550;transition:background .15s,color .15s}
+    .nav button:hover{background:rgba(255,255,255,.08);color:white}
+    .nav button.active{background:#2c574d;color:white}
+    .nav button.active .nav-icon{color:var(--lime)}
+    .nav-icon{width:17px;height:17px;display:grid;place-items:center;color:#9ebdb2}
+    .nav-icon svg{width:17px;height:17px;stroke:currentColor}
+    .sidebar-bottom{margin-top:auto;padding:13px 8px 0}
+    .demo-note{font-size:10.5px;line-height:1.5;color:#aac4bb;border-top:1px solid rgba(255,255,255,.12);padding:14px 5px 0}
+    .demo-note strong{color:#e8f5ef}
+    .main{min-width:0}
+    .topbar{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 34px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.84);position:sticky;top:0;z-index:8;backdrop-filter:blur(12px)}
+    .crumb{font-size:12px;color:var(--muted)}
+    .crumb strong{color:var(--ink);font-weight:650}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .demo-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #e8d9a5;background:#fff9e9;border-radius:999px;padding:6px 9px;color:#775e19;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+    .demo-dot{width:6px;height:6px;background:#d9a334;border-radius:50%}
+    .role-select{height:36px;border:1px solid var(--line);background:white;border-radius:9px;padding:0 28px 0 10px;color:#344440;font-size:12px;font-weight:600}
+    .avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e1eee8;color:var(--forest);font-size:12px;font-weight:750;border:1px solid #d1e2d8}
+    .mobile-brand{display:none}
+    .content{max-width:1440px;margin:0 auto;padding:31px 34px 60px}
+    .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:23px}
+    .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#6f857b;font-weight:700;margin-bottom:7px}
+    h1{font-size:28px;line-height:1.14;letter-spacing:-.8px;margin:0;font-weight:730}
+    .subtitle{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.55;max-width:700px}
+    .head-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9px;border:1px solid transparent;padding:10px 14px;font-size:12px;font-weight:680;transition:transform .12s,background .12s,border-color .12s}
+    .btn:active{transform:translateY(1px)}
+    .btn-primary{background:var(--forest);color:white}
+    .btn-primary:hover{background:#205247}
+    .btn-lime{background:var(--lime);color:#18302a}
+    .btn-lime:hover{background:#cce85b}
+    .btn-secondary{background:white;color:#2c3b37;border-color:#dfe6e1}
+    .btn-secondary:hover{background:#f8faf8;border-color:#c7d4cc}
+    .btn-quiet{background:transparent;color:#4c6059;border-color:transparent;padding:8px 10px}
+    .btn-quiet:hover{background:#eef3ef}
+    .btn-danger{background:var(--red-bg);color:#a1433a;border-color:#f0d3cf}
+    .btn-small{padding:7px 10px;font-size:11px}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .notice{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;background:#eef5e1;border:1px solid #dce9bf;border-radius:12px;color:#445434;font-size:11.5px;line-height:1.55;margin:0 0 19px}
+    .notice strong{color:#30421f}
+    .notice-icon{font-size:16px;line-height:1}
+    .notice-warn{background:var(--amber-bg);border-color:#f2dfb5;color:#6d5624}
+    .notice-danger{background:var(--red-bg);border-color:#eed4cf;color:#884a42}
+    .grid{display:grid;gap:14px}
+    .stats-grid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}
+    .stat{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:17px 18px;min-width:0}
+    .stat-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .stat-label{font-size:11px;color:var(--muted);font-weight:570}
+    .stat-icon{width:29px;height:29px;display:grid;place-items:center;border-radius:9px;background:#eff5eb;color:#4e6d4b;font-size:15px}
+    .stat-value{font-size:25px;font-weight:760;letter-spacing:-.7px;margin-top:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .stat-foot{font-size:10.5px;color:#7f8d87;margin-top:5px}
+    .stat-foot .positive{color:var(--green);font-weight:650}
+    .split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(270px,.9fr);gap:15px}
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;min-width:0}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;border-bottom:1px solid #edf1ed}
+    .panel-title{font-size:13px;font-weight:700;letter-spacing:-.1px}
+    .panel-sub{font-size:10.5px;color:var(--muted);margin-top:4px}
+    .panel-body{padding:17px 18px}
+    .text-link{border:0;background:transparent;color:#286457;font-size:11px;font-weight:700;padding:4px}
+    .text-link:hover{text-decoration:underline}
+    .campaign-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:13px;align-items:center;padding:13px 0;border-bottom:1px solid #edf1ed}
+    .campaign-row:last-child{border-bottom:0;padding-bottom:0}
+    .campaign-row:first-child{padding-top:0}
+    .campaign-main{display:flex;align-items:center;gap:11px;min-width:0}
+    .cover{width:41px;height:41px;flex:0 0 41px;border-radius:11px;background:#e3eee5;color:#2e5c47;display:grid;place-items:center;font-weight:750;font-size:12px;letter-spacing:-.3px}
+    .cover.orange{background:#faead7;color:#996021}
+    .cover.blue{background:#e3edf6;color:#456788}
+    .cover.purple{background:#ede8f3;color:#665381}
+    .campaign-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .campaign-meta{font-size:10.5px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row-end{display:flex;align-items:center;gap:12px}
+    .row-number{text-align:right;font-size:11px;font-weight:680;white-space:nowrap}
+    .row-number small{display:block;font-size:9.5px;color:var(--muted);font-weight:500;margin-top:3px}
+    .badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 8px;font-size:9.5px;line-height:1;font-weight:700;white-space:nowrap}
+    .badge:before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+    .badge-live,.badge-approved,.badge-paid,.badge-active{background:var(--green-bg);color:#286d50}
+    .badge-draft,.badge-pending,.badge-review{background:var(--amber-bg);color:#866316}
+    .badge-rejected,.badge-suspended{background:var(--red-bg);color:#a0473f}
+    .badge-revision,.badge-hold{background:#edf0f2;color:#5d6a71}
+    .badge-neutral{background:#eef2ef;color:#64726c}
+    .attention-list{display:grid;gap:11px}
+    .attention-item{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #edf1ed}
+    .attention-item:last-child{border-bottom:0;padding-bottom:0}
+    .attention-mark{width:27px;height:27px;border-radius:8px;display:grid;place-items:center;background:#fff3db;color:#956712;font-weight:800}
+    .attention-mark.green{background:#e4f3eb;color:#38765b}
+    .attention-copy{font-size:11px;line-height:1.4;color:#34433e}
+    .attention-copy small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+    .progress-wrap{margin-top:12px}
+    .progress-label{display:flex;justify-content:space-between;color:#607069;font-size:10px;margin-bottom:7px}
+    .progress{height:7px;background:#ebefeb;border-radius:99px;overflow:hidden}
+    .progress>span{display:block;height:100%;border-radius:99px;background:#739960}
+    .bar-chart{height:148px;display:flex;align-items:flex-end;gap:13px;padding:10px 8px 0;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to bottom,transparent 0,transparent 36px,#f1f4f1 37px)}
+    .bar-group{height:100%;flex:1;display:flex;align-items:flex-end;justify-content:center;gap:4px;position:relative}
+    .bar{width:min(21px,32%);border-radius:5px 5px 0 0;background:#8fb296;min-height:4px}
+    .bar.self{background:#dce5dc}
+    .bar-label{position:absolute;bottom:-23px;left:50%;transform:translateX(-50%);font-size:9px;color:#7c8983;white-space:nowrap}
+    .chart-legend{display:flex;gap:14px;margin-top:14px;font-size:9.5px;color:#6e7b74}
+    .legend-dot{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px;background:#8fb296}
+    .legend-dot.self{background:#dce5dc}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;text-align:left}
+    th{padding:11px 14px;font-size:9.5px;color:#7b8982;font-weight:650;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;border-bottom:1px solid var(--line)}
+    td{padding:12px 14px;border-bottom:1px solid #eff2ef;font-size:11px;vertical-align:middle}
+    tr:last-child td{border-bottom:0}
+    .person-cell{display:flex;align-items:center;gap:9px;min-width:150px}
+    .mini-avatar{width:29px;height:29px;display:grid;place-items:center;flex:0 0 29px;border-radius:50%;background:#e6eee8;color:#38564a;font-size:9px;font-weight:750}
+    .person-name{font-size:11px;font-weight:650}
+    .person-sub{font-size:9.5px;color:var(--muted);margin-top:3px}
+    .platform-tag{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:#5a6963;background:#f1f4f1;border-radius:5px;padding:4px 6px;white-space:nowrap}
+    .verified{color:#2a7352;font-weight:650}
+    .self-reported{color:#8b6d2a}
+    .table-actions{display:flex;gap:5px;justify-content:flex-end}
+    .toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .searchbox{position:relative;min-width:210px;max-width:300px;flex:1}
+    .searchbox input{width:100%;height:35px;padding:0 11px 0 34px;border:1px solid #e1e8e2;background:#fff;border-radius:8px;font-size:11px;outline:none}
+    .searchbox input:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:#83a990;box-shadow:0 0 0 3px rgba(77,128,98,.12)}
+    .search-icon{position:absolute;left:11px;top:10px;color:#809089;font-size:12px}
+    .filters{display:flex;gap:5px;flex-wrap:wrap}
+    .filter-btn{border:1px solid transparent;background:transparent;color:#6e7b74;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:620}
+    .filter-btn.active{background:#eaf1eb;color:#295545}
+    .empty{padding:34px 18px;text-align:center}
+    .empty-mark{width:45px;height:45px;border-radius:14px;margin:0 auto 11px;background:#eef3ee;color:#567563;display:grid;place-items:center;font-size:19px}
+    .empty-title{font-size:12px;font-weight:700}
+    .empty-copy{max-width:360px;margin:6px auto 13px;color:var(--muted);font-size:10.5px;line-height:1.5}
+    .campaign-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+    .campaign-card{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;min-width:0;transition:border-color .15s,transform .15s}
+    .campaign-card:hover{border-color:#bfd0c3;transform:translateY(-1px)}
+    .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .card-owner{font-size:10px;color:var(--muted);margin-top:8px}
+    .card-title{font-size:14px;font-weight:730;letter-spacing:-.2px;margin-top:13px;line-height:1.3}
+    .card-description{font-size:10.5px;line-height:1.5;color:#64736c;margin-top:7px;min-height:32px}
+    .card-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:13px 0;margin-top:8px;border-top:1px solid #edf1ed;border-bottom:1px solid #edf1ed}
+    .card-stat-label{font-size:9px;color:#7f8b85}
+    .card-stat-value{font-size:11.5px;font-weight:680;margin-top:4px}
+    .tag-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:11px}
+    .soft-tag{background:#f2f5f1;border-radius:5px;padding:5px 7px;color:#68776f;font-size:9px;font-weight:600}
+    .card-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding-top:13px}
+    .page-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .inline-select{height:35px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:0 25px 0 10px;color:#45564e;font-size:11px}
+    .content-list{display:grid;gap:9px}
+    .asset-row{background:white;border:1px solid var(--line);border-radius:12px;padding:13px;display:flex;align-items:center;gap:12px}
+    .asset-icon{width:36px;height:36px;background:#eef3ee;border-radius:10px;display:grid;place-items:center;color:#456b54;font-size:14px;flex:0 0 36px}
+    .asset-info{flex:1;min-width:0}
+    .asset-title{font-size:11.5px;font-weight:670;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .asset-url{font-size:9.5px;color:#64776f;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none}
+    .asset-meta{font-size:9px;color:#89948f;margin-top:4px}
+    .asset-actions{display:flex;align-items:center;gap:4px}
+    .two-col{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.75fr);gap:15px}
+    .rule-box{border:1px solid #e7ece6;background:#f9fbf8;border-radius:10px;padding:12px 13px;margin-top:10px}
+    .receipt-preview{display:block;max-width:100%;max-height:52vh;object-fit:contain;margin:14px auto;border:1px solid var(--line);border-radius:10px;background:#f7f9f6}
+    .rule-title{font-size:10px;color:#5c6b63;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+    .rule-value{font-size:12px;font-weight:680;margin-top:5px;line-height:1.45}
+    .rule-note{font-size:9.5px;color:#79867f;margin-top:4px;line-height:1.45}
+    .role-intro{padding:20px;background:var(--forest);border-radius:15px;color:white;display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:15px}
+    .role-intro h2{font-size:18px;margin:0;letter-spacing:-.4px}
+    .role-intro p{font-size:11px;line-height:1.5;color:#c5d9d1;margin:6px 0 0;max-width:510px}
+    .role-intro .btn{flex:0 0 auto}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+    .step-card{padding:14px;border:1px solid var(--line);border-radius:12px;background:white}
+    .step-index{width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:#e8f2e4;color:#467048;font-size:10px;font-weight:800}
+    .step-title{font-size:11px;font-weight:700;margin-top:10px}
+    .step-copy{font-size:10px;line-height:1.45;color:#6d7b74;margin-top:5px}
+    .notice-stack{display:grid;gap:8px}
+    .subtle{font-size:10px;color:var(--muted);line-height:1.5}
+    .amount{font-variant-numeric:tabular-nums}
+    .mono{font-variant-numeric:tabular-nums}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(14,31,27,.44);z-index:50;display:flex;align-items:center;justify-content:center;padding:18px}
+    .modal{width:min(650px,100%);max-height:min(92vh,850px);overflow:auto;background:white;border-radius:16px;box-shadow:var(--shadow);animation:modal-in .18s ease-out}
+    @keyframes modal-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .modal-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+    .modal-title{font-size:16px;font-weight:750;letter-spacing:-.3px}
+    .modal-subtitle{font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+    .close-btn{border:0;background:#f2f5f2;color:#52625a;border-radius:8px;width:30px;height:30px;font-size:18px;line-height:1}
+    .modal-body{padding:18px 20px}
+    .modal-foot{padding:13px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .field.full{grid-column:1/-1}
+    .field label{font-size:10px;font-weight:670;color:#42534b}
+    .field label .required{color:#b4604f}
+    .field input,.field select,.field textarea{border:1px solid #dfe6e0;border-radius:8px;background:white;color:#24332e;padding:9px 10px;font-size:11px;outline:none;width:100%}
+    .field input,.field select{height:37px}
+    .field textarea{resize:vertical;min-height:74px;line-height:1.5}
+    .field-help{font-size:9.3px;color:#7a8781;line-height:1.4}
+    .field-check{display:flex;align-items:flex-start;gap:8px;font-size:10px;color:#586760;line-height:1.45}
+    .field-check input{margin:1px 0 0;accent-color:#456f4c}
+    .divider-label{display:flex;align-items:center;gap:10px;margin:16px 0 12px;font-size:9.5px;color:#79877f;text-transform:uppercase;letter-spacing:.1em;font-weight:720}
+    .divider-label:after{content:"";height:1px;background:#e8ede8;flex:1}
+    .toast{position:fixed;right:20px;bottom:20px;background:#183d35;color:white;padding:12px 15px;border-radius:10px;z-index:90;box-shadow:var(--shadow);font-size:11px;max-width:min(380px,calc(100vw - 32px));animation:toast-in .2s ease-out}
+    @keyframes toast-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+    .risk-flag{font-size:9px;font-weight:700;color:#9b6230;background:#fff2df;border-radius:5px;padding:4px 6px}
+    .toggle-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eef1ee}
+    .toggle-copy{font-size:10.5px;font-weight:650}
+    .toggle-copy small{display:block;font-size:9.5px;color:var(--muted);font-weight:450;margin-top:4px}
+    .user-role{font-size:9px;font-weight:720;text-transform:uppercase;letter-spacing:.04em;background:#eff3ef;padding:5px 7px;border-radius:5px;color:#5f6e65}
+    .audit-list{display:grid}
+    .audit-row{display:grid;grid-template-columns:58px 1fr;gap:11px;padding:11px 0;border-bottom:1px solid #edf1ed}
+    .audit-time{font-size:9px;color:#839087}
+    .audit-copy{font-size:10.5px;color:#46564e;line-height:1.45}
+    .mobile-nav{display:none}
+    .footer-note{font-size:9.5px;color:#8a9690;margin:18px 0 0;line-height:1.5}
+    @media(max-width:1120px){:root{--sidebar:220px}.content{padding:26px 24px 48px}.topbar{padding:0 24px}.campaign-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:minmax(0,1.2fr) minmax(250px,.85fr)}}
+    @media(max-width:850px){:root{--sidebar:0px}.shell{display:block}.sidebar{display:none}.mobile-brand{display:flex;align-items:center;gap:8px;font-weight:750;font-size:14px}.mobile-brand .brand-mark{width:28px;height:28px;border-radius:8px;font-size:15px}.topbar{height:62px;padding:0 17px}.crumb{display:none}.content{padding:23px 17px 82px}.mobile-nav{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;justify-content:space-around;background:#fff;border-top:1px solid var(--line);padding:7px 5px max(7px,env(safe-area-inset-bottom))}.mobile-nav button{display:grid;justify-items:center;gap:3px;background:transparent;border:0;color:#78857e;font-size:8px;padding:4px 7px}.mobile-nav button.active{color:#285b4a;font-weight:750}.mobile-nav .nav-icon{width:18px;height:18px}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.split,.two-col{grid-template-columns:1fr}.role-intro{align-items:flex-start}.toolbar{align-items:flex-start;flex-direction:column}.searchbox{max-width:none;width:100%}.filters{width:100%}}
+    @media(max-width:570px){.content{padding:19px 13px 78px}.topbar{padding:0 12px}.top-actions{gap:6px}.demo-pill{font-size:0;padding:7px}.demo-pill .demo-dot{margin:0}.role-select{max-width:132px;width:124px;height:33px;font-size:10px;padding-left:7px}.avatar{width:30px;height:30px}.page-head{flex-direction:column;align-items:stretch;margin-bottom:17px}h1{font-size:25px}.head-actions{justify-content:flex-start}.head-actions .btn{flex:1}.campaign-grid{grid-template-columns:1fr}.stats-grid{gap:9px}.stat{padding:13px}.stat-value{font-size:21px;margin-top:10px}.stat-label{font-size:10px}.stat-foot{font-size:9px}.panel-head{padding:14px}.panel-body{padding:14px}.steps{grid-template-columns:1fr}.role-intro{padding:16px;flex-direction:column}.role-intro h2{font-size:16px}.role-intro .btn{width:100%}.field-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.modal-backdrop{padding:8px;align-items:flex-end}.modal{max-height:94vh;border-radius:16px 16px 10px 10px}.modal-head{padding:16px}.modal-body{padding:16px}.modal-foot{padding:12px 16px}.asset-row{align-items:flex-start}.asset-actions{flex-direction:column}.page-tools{align-items:flex-start;flex-direction:column}.inline-select{width:100%}.row-end{gap:7px}.table-actions .btn-small{padding:6px 7px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+  (function(){
+    "use strict";
+    var STORAGE_KEY="clipsetu-mvp-v1";
+    var icons={
+      overview:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>',
+      campaigns:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z"/><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20M8 7h8M8 10h6"/></svg>',
+      content:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="m10 9 5 3-5 3z"/></svg>',
+      submissions:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M7 3h10l4 4v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h6M7 13h10M7 17h7"/></svg>',
+      clippers:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.5-3.4 2.5-5 6-5s5.5 1.6 6 5M16 5.2a3.5 3.5 0 0 1 0 6.6M18 15c1.8.5 2.8 2 3 5"/></svg>',
+      payouts:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>',
+      insights:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 6-7"/></svg>',
+      admin:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M12 3 20 6v5c0 5-3.3 8.2-8 10-4.7-1.8-8-5-8-10V6z"/><path d="m9 12 2 2 4-4"/></svg>',
+      discover:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5M8 11h5.5M10.75 8.25v5.5"/></svg>',
+      earnings:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M12 2v20M17 6.5c-.7-1.1-2-1.7-4-1.7-2.4 0-4 1.2-4 3s1.3 2.6 4.1 3.2c2.8.6 4.4 1.4 4.4 3.4s-1.7 3.4-4.6 3.4c-2.2 0-3.9-.7-4.8-2"/></svg>',
+      profile:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c.5-4.5 3-6.5 8-6.5s7.5 2 8 6.5"/></svg>'
+    };
+    function seedState(){
+      return {
+        users:[
+          {id:"u-admin",name:"Clipsetu Admin",email:"admin@clipsetu.demo",role:"admin",status:"active",createdAt:"2026-09-20"},
+          {id:"u-pulse",name:"Pulse Room (Demo)",email:"team@pulseroom.demo",role:"business",businessType:"Podcast team",status:"active",createdAt:"2026-09-20"},
+          {id:"u-creator-demo",name:"Creator Studio (Demo)",email:"team@creator.demo",role:"creator",businessType:"Creator / podcast",status:"active",createdAt:"2026-09-20"},
+          {id:"u-aarav",name:"Aarav Sharma",email:"aarav@example.demo",role:"clipper",handle:"@aaravcuts",status:"active",createdAt:"2026-09-20",upi:""},
+          {id:"u-ishita",name:"Ishita Verma",email:"ishita@example.demo",role:"clipper",handle:"@ishita.edits",status:"pending",createdAt:"2026-09-21",upi:""}
+        ],
+        campaigns:[
+          {id:"c-demo",name:"Founder Stories — Practice Brief",owner:"Pulse Room (Demo)",ownerId:"u-pulse",ownerType:"Podcast team",category:"Business podcast",description:"A clearly labelled sample campaign for testing the clipper and review flows. Replace this demo brief before launch.",sourceUrl:"https://example.com/clipsetu-practice-episode",status:"live",rate:75,rateUnit:"per_clip",bonus1:0,threshold1:1000000,bonus2:0,threshold2:5000000,bonusScope:"",bonusStacking:"",bonusAllocation:"",platforms:["Instagram Reels","YouTube Shorts"],createdAt:"2026-09-20",confirmBrief:true,isDemo:true},
+          {id:"c-creator-demo",name:"Sample Creator Campaign",owner:"Creator Studio (Demo)",ownerId:"u-creator-demo",ownerType:"Creator / podcast",category:"Podcast",description:"Example campaign for testing. Add an authorised source and complete all payout rules before publishing.",sourceUrl:"",status:"draft",rate:0,rateUnit:"",bonus1:0,threshold1:1000000,bonus2:0,threshold2:5000000,bonusScope:"",bonusStacking:"",bonusAllocation:"",platforms:["Instagram Reels","YouTube Shorts"],createdAt:"2026-09-23",isDemo:true}
+        ],
+        assets:[
+          {id:"a-demo",title:"Practice episode (demo link)",platform:"YouTube",url:"https://example.com/clipsetu-practice-episode",ownerId:"u-pulse",fileName:"",createdAt:"2026-09-20",isDemo:true}
+        ],
+        submissions:[
+          {id:"s-101",campaignId:"c-demo",clipperId:"u-aarav",clipperName:"Aarav Sharma",handle:"@aaravcuts",platform:"Instagram Reels",clipUrl:"https://example.com/aarav-demo-clip",sourceUrl:"https://example.com/clipsetu-practice-episode",claimedViews:184200,verifiedViews:0,verifiedClicks:0,status:"pending",submittedAt:"2026-09-23",reviewNote:"",risk:false,isDemo:true},
+          {id:"s-102",campaignId:"c-demo",clipperId:"u-ishita",clipperName:"Ishita Verma",handle:"@ishita.edits",platform:"YouTube Shorts",clipUrl:"https://example.com/ishita-demo-short",sourceUrl:"https://example.com/clipsetu-practice-episode",claimedViews:213500,verifiedViews:180000,verifiedClicks:0,status:"approved",submittedAt:"2026-09-21",reviewNote:"Sample approved clip; verified views entered manually for this demo.",risk:false,isDemo:true},
+          {id:"s-103",campaignId:"c-demo",clipperId:"u-aarav",clipperName:"Aarav Sharma",handle:"@aaravcuts",platform:"Instagram Reels",clipUrl:"https://example.com/aarav-demo-clip-2",sourceUrl:"https://example.com/clipsetu-practice-episode",claimedViews:92000,verifiedViews:0,verifiedClicks:0,status:"revision",submittedAt:"2026-09-22",reviewNote:"Please add the original source link and keep the clip URL public for review.",risk:false,isDemo:true},
+          {id:"s-104",campaignId:"c-demo",clipperId:"u-ishita",clipperName:"Ishita Verma",handle:"@ishita.edits",platform:"YouTube Shorts",clipUrl:"https://example.com/ishita-demo-short-2",sourceUrl:"https://example.com/clipsetu-practice-episode",claimedViews:48200,verifiedViews:0,verifiedClicks:0,status:"rejected",submittedAt:"2026-09-20",reviewNote:"Sample rejection: duplicate edit. Demo record only.",risk:true,isDemo:true}
+        ],
+        enrollments:[{campaignId:"c-demo",clipperId:"u-aarav",joinedAt:"2026-09-20"}],
+        payouts:[],
+        payoutMethods:[
+          {id:"pm-aarav",clipperId:"u-aarav",type:"upi",label:"aa••••@demo.upi",status:"pending",submittedAt:"2026-09-23",reviewNote:"Sample method for preview only."}
+        ],
+        bonusAllocations:[],
+        audit:[
+          {at:"09:42",text:"Sample performance numbers are marked self-reported until manually verified."},
+          {at:"09:12",text:"Sample creator campaign saved as a draft; source and payout rules still need confirmation."},
+          {at:"Yesterday",text:"Practice campaign opened with demo-only terms and sample records."}
+        ]
+      };
+    }
+    function loadState(){
+      try{var raw=localStorage.getItem(STORAGE_KEY);if(raw){var parsed=JSON.parse(raw);if(parsed&&parsed.campaigns&&parsed.users){parsed.bonusAllocations=parsed.bonusAllocations||[];parsed.payouts=parsed.payouts||[];parsed.payoutMethods=parsed.payoutMethods||[];return parsed;}}}catch(e){}
+      var fresh=seedState();try{localStorage.setItem(STORAGE_KEY,JSON.stringify(fresh));}catch(e){}return fresh;
+    }
+    var app={data:loadState(),role:"admin",view:"overview",filter:"all",search:"",userId:"u-admin",modal:"",editingId:"",reviewStatus:"",receiptPreviews:{},toastTimer:null};
+    function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(app.data));}catch(e){notify("This browser could not save the demo data. Try a smaller upload or a different browser.");}}
+    function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+    function money(n){return new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(Number(n)||0);}
+    function number(n){return new Intl.NumberFormat("en-IN",{maximumFractionDigits:0}).format(Number(n)||0);}
+    function shortNumber(n){n=Number(n)||0;if(n>=10000000)return (n/10000000).toFixed(n>=100000000?0:1)+"Cr";if(n>=100000)return (n/100000).toFixed(n>=10000000?0:1)+"L";if(n>=1000)return (n/1000).toFixed(n>=100000?0:1)+"K";return String(n);}
+    function today(){return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());}
+    function currentUser(){return app.data.users.find(function(u){return u.id===app.userId;})||app.data.users[0];}
+    function campaign(id){return app.data.campaigns.find(function(c){return c.id===id;});}
+    function user(id){return app.data.users.find(function(u){return u.id===id;});}
+    function asset(id){return app.data.assets.find(function(a){return a.id===id;});}
+    function safeHref(raw){try{var u=new URL(raw);return (u.protocol==="http:"||u.protocol==="https:")?u.href:"";}catch(e){return "";}}
+    function addAudit(text){app.data.audit.unshift({at:new Date().toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit"}),text:text});app.data.audit=app.data.audit.slice(0,30);}
+    function notify(text){var old=document.querySelector(".toast");if(old)old.remove();var el=document.createElement("div");el.className="toast";el.textContent=text;document.body.appendChild(el);clearTimeout(app.toastTimer);app.toastTimer=setTimeout(function(){el.remove();},3300);}
+    function initials(name){return String(name||"U").split(/\s+/).slice(0,2).map(function(x){return x[0]||"";}).join("").toUpperCase();}
+    function statusBadge(status){var map={live:"Live",draft:"Draft",pending:"Pending review",approved:"Approved",revision:"Revision requested",rejected:"Rejected",paid:"Recorded paid",unpaid:"Unpaid",hold:"On hold",active:"Active",suspended:"Suspended"};return '<span class="badge badge-'+esc(status)+'">'+esc(map[status]||status)+'</span>';}
+    function unitLabel(unit){return {per_clip:"per approved clip",per_click:"per verified click",per_1k_views:"per 1,000 verified views"}[unit]||"unit not confirmed";}
+    function campaignReady(c){
+      return !!(c&&c.name&&c.owner&&c.rateUnit&&Number(c.rate)>=0&&c.confirmBrief&&!publishCheck(c));
+    }
+    function campaignTerms(c){
+      var base=money(c.rate)+" "+unitLabel(c.rateUnit);
+      var rewards=[];
+      if(Number(c.bonus1)>0)rewards.push(money(c.bonus1)+" at "+number(c.threshold1)+" views");
+      if(Number(c.bonus2)>0)rewards.push(money(c.bonus2)+" at "+number(c.threshold2)+" views");
+      if(rewards.length&&c.bonusScope)rewards.push(c.bonusScope==="clip"?"per clip":"campaign total");
+      if(rewards.length&&c.bonusStacking)rewards.push(c.bonusStacking==="cumulative"?"milestones stack":"highest milestone only");
+      return base+(rewards.length?" · "+rewards.join(" · "):"")+(c.status==="draft"&&!campaignReady(c)?" · payout terms incomplete":"");
+    }
+    function campaignViews(c){return app.data.submissions.filter(function(s){return s.campaignId===c.id;}).reduce(function(sum,s){return sum+(Number(s.verifiedViews)||0);},0);}
+    function clipperSubmissions(){return app.data.submissions.filter(function(s){return s.clipperId===app.userId;});}
+    function visibleCampaigns(){
+      var items=app.data.campaigns;
+      if(app.role==="business")items=items.filter(function(c){return c.ownerId===app.userId;});
+      if(app.role==="clipper")items=items.filter(function(c){return c.status==="live";});
+      if(app.search){var q=app.search.toLowerCase();items=items.filter(function(c){return (c.name+" "+c.owner+" "+c.category).toLowerCase().indexOf(q)>=0;});}
+      return items.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt));});
+    }
+    function visibleSubmissions(){
+      var items=app.data.submissions;
+      if(app.role==="business")items=items.filter(function(s){var c=campaign(s.campaignId);return c&&c.ownerId===app.userId;});
+      if(app.role==="clipper")items=items.filter(function(s){return s.clipperId===app.userId;});
+      if(app.filter!=="all")items=items.filter(function(s){return s.status===app.filter;});
+      if(app.search){var q=app.search.toLowerCase();items=items.filter(function(s){return (s.clipperName+" "+s.handle+" "+s.platform+" "+((campaign(s.campaignId)||{}).name||"")).toLowerCase().indexOf(q)>=0;});}
+      return items.slice().sort(function(a,b){return String(b.submittedAt).localeCompare(String(a.submittedAt));});
+    }
+    function basePay(s,c){
+      if(!c||s.status!=="approved"||s.risk||!c.rateUnit)return 0;
+      if(c.rateUnit==="per_clip")return Number(c.rate)||0;
+      if(c.rateUnit==="per_click")return (Number(s.verifiedClicks)||0)*(Number(c.rate)||0);
+      if(c.rateUnit==="per_1k_views")return (Number(s.verifiedViews)||0)/1000*(Number(c.rate)||0);
+      return 0;
+    }
+    function perClipBonus(s,c){
+      if(!c||s.status!=="approved"||s.risk||c.bonusScope!=="clip"||!c.bonusStacking)return 0;
+      var v=Number(s.verifiedViews)||0,b1=Number(c.bonus1)||0,b2=Number(c.bonus2)||0,t1=Number(c.threshold1)||0,t2=Number(c.threshold2)||0;
+      if(c.bonusStacking==="cumulative")return (b1&&v>=t1?b1:0)+(b2&&v>=t2?b2:0);
+      if(b2&&v>=t2)return b2;if(b1&&v>=t1)return b1;return 0;
+    }
+    function aggregateBonusPool(c){
+      if(!c||c.bonusScope!=="campaign"||!c.bonusStacking)return 0;
+      var v=app.data.submissions.filter(function(s){return s.campaignId===c.id&&s.status==="approved"&&!s.risk;}).reduce(function(t,s){return t+(Number(s.verifiedViews)||0);},0),b1=Number(c.bonus1)||0,b2=Number(c.bonus2)||0,t1=Number(c.threshold1)||0,t2=Number(c.threshold2)||0;
+      if(c.bonusStacking==="cumulative")return (b1&&v>=t1?b1:0)+(b2&&v>=t2?b2:0);
+      if(b2&&v>=t2)return b2;if(b1&&v>=t1)return b1;return 0;
+    }
+    function aggregateBonusFor(s,c){
+      if(!c||c.bonusScope!=="campaign"||!c.bonusAllocation)return 0;
+      var pool=aggregateBonusPool(c);if(!pool)return 0;
+      var approved=app.data.submissions.filter(function(x){return x.campaignId===c.id&&x.status==="approved"&&!x.risk;});
+      if(!approved.length)return 0;
+      var byClipper={};approved.forEach(function(x){byClipper[x.clipperId]=(byClipper[x.clipperId]||0)+(Number(x.verifiedViews)||0);});
+      var ids=Object.keys(byClipper),ownerViews=byClipper[s.clipperId]||0,myViews=Number(s.verifiedViews)||0,total=ids.reduce(function(t,id){return t+byClipper[id];},0),share=0;
+      if(c.bonusAllocation==="equal")share=pool/ids.length;
+      else if(c.bonusAllocation==="proportional")share=total?pool*ownerViews/total:0;
+      else if(c.bonusAllocation==="top"){var top=ids.slice().sort(function(a,b){return byClipper[b]-byClipper[a];})[0];share=top===s.clipperId?pool:0;}
+      if(!share)return 0;
+      var clipCount=approved.filter(function(x){return x.clipperId===s.clipperId;}).length;
+      return ownerViews?share*myViews/ownerViews:share/Math.max(clipCount,1);
+    }
+    function payoutRows(){
+      return app.data.submissions.filter(function(s){return s.status==="approved";}).map(function(s){
+        var c=campaign(s.campaignId),base=basePay(s,c),allocation=app.data.bonusAllocations.find(function(a){return a.submissionId===s.id;}),bonus=perClipBonus(s,c)+aggregateBonusFor(s,c)+(allocation?Number(allocation.amount)||0:0),pool=c?aggregateBonusPool(c):0,allocated=c?app.data.bonusAllocations.filter(function(a){return a.campaignId===c.id;}).reduce(function(t,a){return t+(Number(a.amount)||0);},0):0,needsAllocation=!!(c&&c.bonusScope==="campaign"&&pool>allocated&&c.bonusAllocation==="manual");
+        var locked=!!(s.risk||(c&&(!c.rateUnit||((Number(c.bonus1)>0||Number(c.bonus2)>0)&&(!c.bonusScope||!c.bonusStacking||(c.bonusScope==="campaign"&&!c.bonusAllocation))))));
+        var paymentRecords=app.data.payouts.filter(function(p){return p.submissionId===s.id;}),paid=paymentRecords.reduce(function(t,p){return t+(Number(p.amount)||0);},0);
+        return {submission:s,campaign:c,base:base,bonus:bonus,total:base+bonus,needsAllocation:needsAllocation,locked:locked,paid:paid,fullyPaid:paid>=base+bonus-0.005,remaining:Math.max(0,base+bonus-paid),lastReference:paymentRecords.length?paymentRecords[0].reference:""};
+      });
+    }
+    function payoutMethodFor(clipperId){return (app.data.payoutMethods||[]).find(function(m){return m.clipperId===clipperId;})||null;}
+    function maskedUpi(raw){var value=String(raw||"").trim(),at=value.lastIndexOf("@");if(at<1||at===value.length-1)return "";return value.slice(0,Math.min(2,at))+"••••@"+value.slice(at+1);}
+    function payoutMethodPanel(){
+      var method=payoutMethodFor(app.userId),details=method?'<div class="rule-box"><div class="rule-title">Saved demo method</div><div class="rule-value">'+esc(method.type==="upi"?"UPI":"Bank account")+' · '+esc(method.label)+'</div><div class="rule-note">Review status: '+statusBadge(method.status)+(method.reviewNote?' · '+esc(method.reviewNote):'')+'</div></div>':'<div class="empty"><div class="empty-title">No payout method submitted</div><div class="empty-copy">Add a demo method to preview the review flow.</div></div>';
+      return '<div class="panel" style="margin-bottom:15px"><div class="panel-head"><div><div class="panel-title">Payout method</div><div class="panel-sub">UPI or bank method · admin approval required before a payout is recorded</div></div><button class="btn btn-secondary btn-small" data-action="edit-payout-method">'+(method?"Update method":"Add method")+'</button></div><div class="panel-body">'+details+'<div class="notice notice-warn" style="margin:12px 0 0"><span class="notice-icon">!</span><div>Demo only: use fake values. Only a masked label is saved in this browser; never enter a real UPI ID, bank account, IFSC, UTR or identity data. This preview has no secure account storage.</div></div></div></div>';
+    }
+    function payoutMethodReviewPanel(){
+      var methods=app.data.payoutMethods||[];
+      var rows=methods.map(function(m){var u=user(m.clipperId)||{};return '<tr><td><div class="person-name">'+esc(u.name||"Clipper")+'</div><div class="person-sub">'+esc(u.handle||"")+'</div></td><td>'+esc(m.type==="upi"?"UPI":"Bank account")+' · '+esc(m.label)+'</td><td>'+statusBadge(m.status)+'</td><td>'+(m.status==="pending"?'<div class="table-actions"><button class="btn btn-lime btn-small" data-action="approve-payout-method" data-id="'+esc(m.id)+'">Approve</button><button class="btn btn-danger btn-small" data-action="reject-payout-method" data-id="'+esc(m.id)+'">Reject</button></div>':esc(m.reviewNote||"Reviewed"))+'</td></tr>';}).join("");
+      return '<div class="panel" style="margin-bottom:15px"><div class="panel-head"><div><div class="panel-title">Payout method review</div><div class="panel-sub">Only masked demo labels are shown; real account details are not collected.</div></div><span class="subtle">'+methods.filter(function(m){return m.status==="pending";}).length+' pending</span></div>'+(rows?'<div class="table-wrap"><table><thead><tr><th>Clipper</th><th>Masked method</th><th>Status</th><th>Review</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty"><div class="empty-title">No payout methods submitted</div></div>')+'</div>';
+    }
+    function receiptHistoryPanel(){
+      var payments=app.data.payouts||[];
+      if(app.role==="clipper")payments=payments.filter(function(p){return p.clipperId===app.userId;});
+      if(app.role==="business")payments=payments.filter(function(p){var s=app.data.submissions.find(function(x){return x.id===p.submissionId;}),c=s&&campaign(s.campaignId);return c&&c.ownerId===app.userId;});
+      var rows=payments.map(function(p){var s=app.data.submissions.find(function(x){return x.id===p.submissionId;})||{},preview=!!app.receiptPreviews[p.id];return '<tr><td>'+esc(app.role==="clipper"?"Your clip":s.clipperName||"Clipper")+'</td><td class="amount">'+money(p.amount)+'</td><td>'+esc(p.recordedAt||"")+'</td><td>'+esc(p.reference||"—")+'</td><td>'+(p.receiptAttached?'<span class="badge badge-review">'+(preview?"Session preview":"Preview not saved")+'</span>':'<span class="badge badge-neutral">Reference only</span>')+'</td><td><button class="btn btn-secondary btn-small" data-action="view-payout-proof" data-id="'+esc(p.id)+'">View proof</button></td></tr>';}).join("");
+      return '<div class="panel" style="margin-top:15px"><div class="panel-head"><div><div class="panel-title">Manual payment proof</div><div class="panel-sub">Receipt screenshots are temporary in this demo; real sharing requires private storage and sign-in.</div></div></div>'+(rows?'<div class="table-wrap"><table><thead><tr><th>Clip</th><th>Amount</th><th>Recorded</th><th>Demo reference</th><th>Receipt</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty"><div class="empty-title">No manual payment records yet</div><div class="empty-copy">When an admin records a payment, its demo reference and receipt preview appear here.</div></div>')+'</div>';
+    }
+    function receiptModal(){
+      var p=app.data.payouts.find(function(x){return x.id===app.editingId;});if(!p||(app.role!=="admin"&&!(app.role==="clipper"&&p.clipperId===app.userId)))return "";
+      var preview=app.receiptPreviews[p.id],proof=preview?'<img class="receipt-preview" src="'+esc(preview)+'" alt="Manual payout receipt preview">':p.receiptAttached?'<div class="notice notice-warn"><span class="notice-icon">!</span><div>The screenshot preview only lives in the admin browser session. It is not uploaded or recoverable after refresh in this demo.</div></div>':'<div class="empty-copy">No screenshot was attached; the payment reference is shown below.</div>';
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title" id="modalTitle">Manual payment proof</div><div class="modal-subtitle">'+money(p.amount)+' · recorded '+esc(p.recordedAt||"")+'</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><div class="modal-body"><div class="rule-box"><div class="rule-title">Demo reference</div><div class="rule-value">'+esc(p.reference||"Not provided")+'</div><div class="rule-note">This is a ledger record only; the prototype did not send money.</div></div>'+(p.receiptRef?'<div class="rule-box"><div class="rule-title">Receipt note</div><div class="rule-value">'+esc(p.receiptRef)+'</div></div>':"")+proof+'<div class="field-help" style="margin-top:12px">In production, receipt files must use private storage and be visible only to the clipper and authorized admins.</div></div><div class="modal-foot"><button class="btn btn-secondary" data-action="close-modal">Close</button></div></section></div>';
+    }
+    function labelsForRole(){
+      if(app.role==="admin")return [
+        ["overview","Overview","overview"],["campaigns","Campaigns","campaigns"],["content","Content library","content"],["submissions","Submissions","submissions"],["clippers","Users & clippers","clippers"],["payouts","Payout ledger","payouts"],["insights","Insights","insights"],["admin","Admin center","admin"]
+      ];
+      if(app.role==="business")return [
+        ["overview","Workspace home","overview"],["campaigns","My campaigns","campaigns"],["content","Content library","content"],["submissions","Clip submissions","submissions"],["insights","Performance","insights"],["admin","Workspace settings","admin"]
+      ];
+      return [
+        ["overview","Home","overview"],["discover","Discover campaigns","discover"],["submissions","My clips","submissions"],["payouts","Earnings","earnings"],["profile","My profile","profile"]
+      ];
+    }
+    function roleText(){return app.role==="admin"?"Admin console":app.role==="business"?"Business / creator":"Clipper portal";}
+    function pageTitle(){
+      var map={overview:["Good to see you, "+(currentUser().name||"there"),"A clear view of campaign activity, clip reviews and earnings."],campaigns:[app.role==="business"?"Your campaigns":"Campaigns","Build a clear brief, set payable rules and launch when every term is explicit."],content:["Content library","Keep source episodes and approved campaign materials in one reusable place."],submissions:[app.role==="clipper"?"My clips":app.role==="business"?"Clip submissions":"Submission review","Every post link and performance claim gets a visible review state."],clippers:["Users & clippers","Review registrations, manage roles and keep campaign participation accountable."],payouts:[app.role==="clipper"?"Earnings":"Payout ledger","INR earnings are calculated from approved work and verified performance only."],insights:["Performance insights","Compare creator-reported reach with views checked by your team."],admin:["Admin center","Manage platform operations, account status and the audit trail."],discover:["Campaign marketplace","Join open briefs, create clips and submit published-post links."],profile:["Clipper profile","Keep your public handle and payout details up to date."]};
+      return map[app.view]||map.overview;
+    }
+    function navMarkup(items,mobile){
+      return items.map(function(item){return '<button type="button" class="'+(app.view===item[0]?"active":"")+'" data-action="navigate" data-view="'+item[0]+'"><span class="nav-icon">'+(icons[item[2]]||"")+'</span><span>'+esc(item[1])+'</span></button>';}).join("");
+    }
+    function roleOptions(){
+      var all=[{key:"admin",id:"u-admin",label:"Admin console"}].concat(app.data.users.filter(function(u){return ["business","creator","clipper"].indexOf(u.role)>=0;}).map(function(u){return {key:u.role==="clipper"?"clipper":"business",id:u.id,label:(u.role==="clipper"?"Clipper · ":"Business · ")+u.name};}));
+      return all.map(function(x){var selected=x.key===app.role&&x.id===app.userId;return '<option value="'+esc(x.key+":"+x.id)+'" '+(selected?"selected":"")+'>'+esc(x.label)+'</option>';}).join("");
+    }
+    function shell(content){
+      var title=pageTitle(),u=currentUser(),items=labelsForRole();
+      return '<div class="shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">c.</div><div><div class="brand-name">clipsetu</div><div class="brand-sub">Clips that count</div></div></div><div class="workspace-tag"><div class="workspace-kicker">Current workspace</div><div class="workspace-name">'+esc(app.role==="admin"?"Platform operations":app.role==="business"?(u.name||"Business team"):"Clipper account")+'</div></div><div class="nav-label">Workspace</div><nav class="nav">'+navMarkup(items,false)+'</nav><div class="sidebar-bottom"><div class="demo-note"><strong>Preview mode</strong><br>Sample records are labeled. Data stays in this browser only; no payment is sent.</div></div></aside><main class="main"><header class="topbar"><div class="mobile-brand"><div class="brand-mark">c.</div><span>clipsetu</span></div><div class="crumb">Workspace <span style="color:#aab4ae">/</span> <strong>'+esc(title[0])+'</strong></div><div class="top-actions"><span class="demo-pill"><span class="demo-dot"></span> Demo mode</span><select aria-label="Switch workspace role" class="role-select" id="roleSelect">'+roleOptions()+'</select><button class="avatar" type="button" data-action="open-profile" aria-label="Account profile">'+esc(initials(u.name))+'</button></div></header><section class="content">'+content+'</section></main><nav class="mobile-nav">'+navMarkup(items,true)+'</nav></div>'+renderModal();
+    }
+    function pageHead(eyebrow,title,subtitle,actions){
+      return '<div class="page-head"><div><div class="eyebrow">'+esc(eyebrow)+'</div><h1>'+esc(title)+'</h1><p class="subtitle">'+esc(subtitle)+'</p></div><div class="head-actions">'+(actions||"")+'</div></div>';
+    }
+    function demoNotice(text,warning){
+      return '<div class="notice '+(warning?"notice-warn":"")+'"><span class="notice-icon">'+(warning?"!":"i")+'</span><div>'+text+'</div></div>';
+    }
+    function stat(label,value,foot,iconText){
+      return '<div class="stat"><div class="stat-top"><div class="stat-label">'+esc(label)+'</div><div class="stat-icon">'+esc(iconText||"•")+'</div></div><div class="stat-value">'+value+'</div><div class="stat-foot">'+foot+'</div></div>';
+    }
+    function statusCampaigns(){return app.data.campaigns.filter(function(c){return app.role!=="business"||c.ownerId===app.userId;});}
+    function filteredSubmissionsCount(status){return visibleSubmissions().filter(function(s){return s.status===status;}).length;}
+    function miniCampaignRows(items){
+      if(!items.length)return '<div class="empty"><div class="empty-mark">＋</div><div class="empty-title">No campaigns here yet</div><div class="empty-copy">Create a campaign, add a source, and set the payout rules before you publish.</div><button class="btn btn-primary btn-small" data-action="new-campaign">Create campaign</button></div>';
+      return items.slice(0,5).map(function(c){return '<div class="campaign-row"><div class="campaign-main"><div class="cover '+(c.isDemo?"orange":"")+'">'+esc(initials(c.owner))+'</div><div style="min-width:0"><div class="campaign-name">'+esc(c.name)+'</div><div class="campaign-meta">'+esc(c.owner)+' · '+esc(c.category||"Campaign")+'</div></div></div><div class="row-end">'+statusBadge(c.status)+'<div class="row-number">'+shortNumber(campaignViews(c))+'<small>verified views</small></div></div></div>';}).join("");
+    }
+    function miniSubmissionRows(items){
+      if(!items.length)return '<div class="empty"><div class="empty-mark">✓</div><div class="empty-title">Nothing waiting for review</div><div class="empty-copy">New clip links will appear here with self-reported views clearly separated from verified views.</div></div>';
+      return '<div class="table-wrap"><table><thead><tr><th>Clipper</th><th>Campaign</th><th>Views claimed</th><th>Verified views</th><th>Status</th><th></th></tr></thead><tbody>'+items.slice(0,5).map(function(s){var c=campaign(s.campaignId)||{};return '<tr><td><div class="person-cell"><div class="mini-avatar">'+esc(initials(s.clipperName))+'</div><div><div class="person-name">'+esc(s.clipperName)+'</div><div class="person-sub">'+esc(s.handle)+'</div></div></div></td><td>'+esc(c.name||"Campaign")+'</td><td class="self-reported">'+number(s.claimedViews)+'</td><td class="verified">'+number(s.verifiedViews)+'</td><td>'+statusBadge(s.status)+'</td><td><button class="btn btn-secondary btn-small" data-action="review" data-id="'+s.id+'">Review</button></td></tr>';}).join("")+'</tbody></table></div>';
+    }
+    function chart(camps){
+      var items=camps.slice(0,6).reverse();if(!items.length)return '<div class="empty"><div class="empty-title">Performance will appear here</div></div>';
+      return '<div class="bar-chart">'+items.map(function(c){var v=campaignViews(c),max=Math.max.apply(null,camps.map(function(x){return campaignViews(x);}).concat([1]));var pct=Math.max(5,Math.round(v/max*100));var sub=app.data.submissions.filter(function(s){return s.campaignId===c.id;}).reduce(function(t,s){return t+(Number(s.claimedViews)||0);},0);var selfPct=Math.max(4,Math.min(100,Math.round(sub/max*100)));return '<div class="bar-group" title="'+esc(c.name)+'"><div class="bar self" style="height:'+selfPct+'%"></div><div class="bar" style="height:'+pct+'%"></div><div class="bar-label">'+esc(c.name.length>12?c.name.slice(0,11)+"…":c.name)+'</div></div>';}).join("")+'</div><div class="chart-legend"><span><i class="legend-dot"></i>Verified</span><span><i class="legend-dot self"></i>Self-reported</span></div>';
+    }
+    function adminOverview(){
+      var camps=statusCampaigns(),subs=app.data.submissions,waiting=subs.filter(function(s){return s.status==="pending";}).length,verified=subs.reduce(function(t,s){return t+(Number(s.verifiedViews)||0);},0),claimed=subs.reduce(function(t,s){return t+(Number(s.claimedViews)||0);},0),pay=payoutRows().filter(function(r){return !r.fullyPaid&&!r.locked;}).reduce(function(t,r){return t+r.remaining;},0);
+      return pageHead("Platform operations","Good to see you, "+currentUser().name,"A clear view of campaign activity, clip reviews and earnings.",'<button class="btn btn-secondary" data-action="new-user">Register account</button><button class="btn btn-primary" data-action="new-campaign">＋ Create campaign</button>')+
+        demoNotice("<strong>Prototype data only.</strong> The sample creator campaign is a draft until its authorised source and payout rules are set. The other live campaign and all sample profiles are practice records.",false)+
+        '<div class="grid stats-grid">'+stat("Live campaigns",'<span class="amount">'+camps.filter(function(c){return c.status==="live";}).length+'</span>','1 practice campaign in sample data','◉')+stat("Clips to review",'<span class="amount">'+waiting+'</span>','Pending human review','▤')+stat("Verified views",'<span class="amount">'+shortNumber(verified)+'</span>','of '+shortNumber(claimed)+' creator-reported','↗')+stat("Unpaid approved work",'<span class="amount">'+money(pay)+'</span>','Demo estimate · no transfer made','₹')+'</div>'+
+        '<div class="split"><div class="panel"><div class="panel-head"><div><div class="panel-title">Campaign pulse</div><div class="panel-sub">Verified performance by campaign</div></div><button class="text-link" data-action="navigate" data-view="campaigns">All campaigns →</button></div><div class="panel-body">'+miniCampaignRows(camps)+'</div></div><div class="panel"><div class="panel-head"><div><div class="panel-title">Needs your attention</div><div class="panel-sub">Resolve before money or reach is reported</div></div></div><div class="panel-body"><div class="attention-list"><div class="attention-item"><div class="attention-mark">!</div><div class="attention-copy"><strong>Complete sample campaign terms</strong><small>Rate unit, bonus basis and stacking are still unset.</small></div></div><div class="attention-item"><div class="attention-mark">!</div><div class="attention-copy"><strong>'+waiting+' clip submission'+(waiting===1?"":"s")+' awaiting review</strong><small>Claimed views are not verified views.</small></div></div><div class="attention-item"><div class="attention-mark green">✓</div><div class="attention-copy"><strong>No payout connection</strong><small>Marking a row paid records a reference only.</small></div></div></div><div style="margin-top:16px"><button class="btn btn-secondary btn-small" data-action="navigate" data-view="admin">Open admin center</button></div></div></div></div>'+
+        '<div class="grid split" style="margin-top:15px"><div class="panel"><div class="panel-head"><div><div class="panel-title">Reach integrity</div><div class="panel-sub">Never mix self-reported and verified view counts</div></div></div><div class="panel-body">'+chart(camps)+'</div></div><div class="panel"><div class="panel-head"><div><div class="panel-title">Latest submissions</div><div class="panel-sub">Human review queue</div></div><button class="text-link" data-action="navigate" data-view="submissions">Open queue →</button></div>'+miniSubmissionRows(subs.filter(function(s){return s.status==="pending";}))+'</div></div>';
+    }
+    function businessOverview(){
+      var camps=statusCampaigns(),subs=visibleSubmissions(),waiting=subs.filter(function(s){return s.status==="pending";}).length,earned=payoutRows().filter(function(r){return !r.fullyPaid&&!r.locked&&r.campaign&&r.campaign.ownerId===app.userId;}).reduce(function(t,r){return t+r.remaining;},0),verified=subs.reduce(function(t,s){return t+(Number(s.verifiedViews)||0);},0);
+      return pageHead("Business workspace","Your campaigns, in one place","Create campaigns for your brand, podcast or founder account; publish only after the brief and payout terms are ready.",'<button class="btn btn-primary" data-action="new-campaign">＋ Create campaign</button>')+
+        demoNotice("<strong>Self-serve workspace.</strong> Add your source content, choose the clip format and set transparent INR rules. This preview stores your work in this browser; secure sign-in and hosted uploads need a backend.",true)+
+        '<div class="grid stats-grid">'+stat("Your campaigns",camps.length,"Drafts and published campaigns","◉")+stat("Submissions",subs.length,"Clips submitted to your briefs","▤")+stat("Verified views",shortNumber(verified),"Manual verification in this preview","↗")+stat("Unpaid estimate",money(earned),"Approved work · not a bank transfer","₹")+'</div>'+
+        '<div class="role-intro"><div><h2>Launch your first clipping campaign</h2><p>Set a source episode, explain what good clips look like, choose rate and bonus rules, then publish the brief to clippers.</p></div><button class="btn btn-lime" data-action="new-campaign">Create a campaign →</button></div>'+
+        '<div class="grid split"><div class="panel"><div class="panel-head"><div><div class="panel-title">Your campaign portfolio</div><div class="panel-sub">Campaigns owned by this workspace</div></div><button class="text-link" data-action="navigate" data-view="campaigns">Manage →</button></div><div class="panel-body">'+miniCampaignRows(camps)+'</div></div><div class="panel"><div class="panel-head"><div><div class="panel-title">Three steps to launch</div></div></div><div class="panel-body"><div class="steps" style="grid-template-columns:1fr"><div class="step-card"><div class="step-index">1</div><div class="step-title">Add source content</div><div class="step-copy">Episode, video or approved source link.</div></div><div class="step-card"><div class="step-index">2</div><div class="step-title">Set the rules</div><div class="step-copy">₹ rate unit, view thresholds, bonus scope and stacking.</div></div><div class="step-card"><div class="step-index">3</div><div class="step-title">Publish & review</div><div class="step-copy">Clippers join, submit post links and await your review.</div></div></div></div></div></div>';
+    }
+    function clipperOverview(){
+      var subs=clipperSubmissions(),approved=subs.filter(function(s){return s.status==="approved";}),earn=payoutRows().filter(function(r){return r.submission.clipperId===app.userId;}).reduce(function(t,r){return t+r.total;},0),views=approved.reduce(function(t,s){return t+(Number(s.verifiedViews)||0);},0),open=app.data.campaigns.filter(function(c){return c.status==="live";}).length;
+      return pageHead("Clipper portal","Your work, tracked fairly","Find open briefs, submit original post links and see what is verified before earnings are calculated.",'<button class="btn btn-primary" data-action="navigate" data-view="discover">Explore campaigns</button>')+
+        demoNotice("<strong>Demo account.</strong> Views begin as self-reported. Only numbers a campaign owner or admin manually verifies are used for payouts in this preview.",false)+
+        '<div class="grid stats-grid">'+stat("Open campaigns",open,"Join a brief before submitting","◉")+stat("Your submissions",subs.length,"All review states shown","▤")+stat("Verified views",shortNumber(views),"Manual check · not platform sync","↗")+stat("Estimated earnings",money(earn),"Approved work only · no transfer sent","₹")+'</div>'+
+        '<div class="role-intro"><div><h2>Make every clip count</h2><p>Choose a live campaign, follow its brief, then submit the public post link and original source. We keep your reported reach separate from verified results.</p></div><button class="btn btn-lime" data-action="navigate" data-view="discover">Browse briefs →</button></div>'+
+        '<div class="grid split"><div class="panel"><div class="panel-head"><div><div class="panel-title">Your latest clips</div><div class="panel-sub">Status and review note stay visible</div></div><button class="text-link" data-action="navigate" data-view="submissions">See all →</button></div>'+miniSubmissionRows(subs)+'</div><div class="panel"><div class="panel-head"><div><div class="panel-title">Fair-tracking rules</div></div></div><div class="panel-body"><div class="rule-box"><div class="rule-title">Reported reach</div><div class="rule-value">Your submitted platform count</div><div class="rule-note">Helpful context, but not payout-verified yet.</div></div><div class="rule-box"><div class="rule-title">Verified reach</div><div class="rule-value">Reviewed by the campaign team</div><div class="rule-note">Only this count can unlock view-based bonuses.</div></div></div></div></div>';
+    }
+    function campaignPage(){
+      var camps=visibleCampaigns(),isClipper=app.role==="clipper",actions=isClipper?"":'<button class="btn btn-primary" data-action="new-campaign">＋ Create campaign</button>';
+      var heading=pageHead(isClipper?"Marketplace":"Campaign management",isClipper?"Open campaigns":app.role==="business"?"Your campaigns":"Campaigns",isClipper?"Browse live briefs and join the ones that fit your editing style.":"Create content briefs for brands, founders and podcasts; keep each offer and milestone clear before launch.",actions);
+      var add=app.role==="admin"?demoNotice("<strong>Sample creator campaign:</strong> its source, pay unit and reward rules are intentionally blank until the campaign owner confirms them.",true):"";
+      var cards=camps.length?'<div class="campaign-grid">'+camps.map(campaignCard).join("")+'</div>':'<div class="panel"><div class="empty"><div class="empty-mark">＋</div><div class="empty-title">Start with a campaign</div><div class="empty-copy">Add an episode or source asset, spell out the clip brief, and set the payout rules before you publish.</div><button class="btn btn-primary btn-small" data-action="new-campaign">Create campaign</button></div></div>';
+      return heading+add+'<div class="page-tools"><div class="searchbox"><span class="search-icon">⌕</span><input id="campaignSearch" type="search" placeholder="Search campaigns or creators" value="'+esc(app.search)+'" aria-label="Search campaigns"></div><select class="inline-select" id="campaignStatusFilter" aria-label="Filter campaign status"><option value="all">All statuses</option><option value="live">Live</option><option value="draft">Draft</option></select></div>'+cards+'<p class="footer-note">Publishing a campaign makes it visible to clippers. Demo preview does not notify real users or move money.</p>';
+    }
+    function campaignCard(c){
+      var clips=app.data.submissions.filter(function(s){return s.campaignId===c.id;}).length,joined=app.data.enrollments.some(function(e){return e.campaignId===c.id&&e.clipperId===app.userId;});
+      var action=app.role==="clipper"?(joined?'<button class="btn btn-secondary btn-small" data-action="new-submission" data-campaign="'+esc(c.id)+'">Submit a clip</button>':'<button class="btn btn-primary btn-small" data-action="join-campaign" data-id="'+esc(c.id)+'">Join campaign</button>'):('<button class="btn btn-secondary btn-small" data-action="campaign-details" data-id="'+esc(c.id)+'">View details</button>'+(c.status==="draft"?'<button class="btn btn-primary btn-small" data-action="edit-campaign" data-id="'+esc(c.id)+'">Review & publish</button>':''));
+      return '<article class="campaign-card"><div class="card-top"><div class="cover '+(c.isDemo?"orange":"")+'">'+esc(initials(c.owner))+'</div>'+statusBadge(c.status)+'</div><div class="card-owner">'+esc(c.owner)+' · '+esc(c.ownerType||c.category||"Campaign")+(c.isDemo?' · Sample':'')+'</div><div class="card-title">'+esc(c.name)+'</div><div class="card-description">'+esc(c.description||"A clipping campaign brief.")+'</div><div class="card-stats"><div><div class="card-stat-label">Clip reward</div><div class="card-stat-value">'+esc(money(c.rate))+' '+esc(unitLabel(c.rateUnit))+'</div></div><div><div class="card-stat-label">Verified reach</div><div class="card-stat-value">'+esc(shortNumber(campaignViews(c)))+'</div></div></div><div class="tag-row"><span class="soft-tag">'+esc(c.category||"General")+'</span><span class="soft-tag">'+clips+' submission'+(clips===1?"":"s")+'</span>'+(c.bonus1||c.bonus2?'<span class="soft-tag">Milestone bonus</span>':"")+'</div><div class="card-bottom"><span class="subtle">'+(c.status==="draft"&&!campaignReady(c)?"Payout terms need setup":c.status==="live"?"Source & brief available":"Ready to publish")+'</span><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">'+action+'</div></div></article>';
+    }
+    function contentPage(){
+      var assets=app.data.assets.filter(function(a){return app.role!=="business"||a.ownerId===app.userId;});
+      if(app.search){var q=app.search.toLowerCase();assets=assets.filter(function(a){return (a.title+" "+a.platform+" "+a.url).toLowerCase().indexOf(q)>=0;});}
+      return pageHead("Reusable campaign assets","Content library","Add podcast episodes, brand videos, source links and clip references. Reuse them across campaigns.",'<button class="btn btn-primary" data-action="new-asset">＋ Add content</button>')+
+        demoNotice("<strong>Uploads in this preview are local only.</strong> A selected video filename is saved for demonstration; secure file storage and sharing require a hosted storage integration.",true)+
+        '<div class="page-tools"><div class="searchbox"><span class="search-icon">⌕</span><input id="assetSearch" type="search" placeholder="Search content" value="'+esc(app.search)+'" aria-label="Search content"></div><span class="subtle">'+assets.length+' asset'+(assets.length===1?"":"s")+'</span></div>'+
+        (assets.length?'<div class="content-list">'+assets.map(function(a){var href=safeHref(a.url);return '<article class="asset-row"><div class="asset-icon">'+(a.fileName?"▣":"▶")+'</div><div class="asset-info"><div class="asset-title">'+esc(a.title)+'</div>'+(href?'<a class="asset-url" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(a.url)+'</a>':'<div class="asset-url">No source link added</div>')+'<div class="asset-meta">'+esc(a.platform||"Source")+' · Added '+esc(a.createdAt||"today")+(a.fileName?" · local file selected: "+esc(a.fileName):"")+(a.isDemo?" · demo record":"")+'</div></div><div class="asset-actions"><button class="btn btn-secondary btn-small" data-action="use-asset" data-id="'+esc(a.id)+'">Use in campaign</button>'+(app.role==="admin"?'<button class="btn btn-quiet btn-small" data-action="delete-asset" data-id="'+esc(a.id)+'" aria-label="Delete content">×</button>':"")+'</div></article>';}).join("")+'</div>':'<div class="panel"><div class="empty"><div class="empty-mark">▶</div><div class="empty-title">Your content library is empty</div><div class="empty-copy">Add a source URL or a local video reference. Attach the source to a campaign so clippers know what they can use.</div><button class="btn btn-primary btn-small" data-action="new-asset">Add source content</button></div></div>');
+    }
+    function submissionsPage(){
+      var subs=visibleSubmissions(),clipper=app.role==="clipper";
+      var head=pageHead(clipper?"Clipper workspace":"Human review queue",clipper?"My clip submissions":app.role==="business"?"Clip submissions":"Review submissions",clipper?"Track each clip, add a new post link and check which reported views have been verified.":"Check source and published links, enter verified metrics and leave a clear decision note.",clipper?'<button class="btn btn-primary" data-action="new-submission">＋ Submit a clip</button>':'');
+      var filterOptions=clipper?[["all","All"],["pending","In review"],["approved","Approved"],["revision","Revision"],["rejected","Rejected"]]:[["all","All"],["pending","Pending"],["approved","Approved"],["revision","Revision"],["rejected","Rejected"]];
+      var toolbar='<div class="toolbar"><div class="searchbox"><span class="search-icon">⌕</span><input id="submissionSearch" type="search" placeholder="Search clipper, campaign or platform" value="'+esc(app.search)+'" aria-label="Search submissions"></div><div class="filters">'+filterOptions.map(function(f){return '<button class="filter-btn '+(app.filter===f[0]?"active":"")+'" data-action="filter-submissions" data-filter="'+f[0]+'">'+f[1]+'</button>';}).join("")+'</div></div>';
+      var rows=subs.map(function(s){var c=campaign(s.campaignId)||{};return '<tr><td><div class="person-cell"><div class="mini-avatar">'+esc(initials(s.clipperName))+'</div><div><div class="person-name">'+esc(s.clipperName)+'</div><div class="person-sub">'+esc(s.handle)+'</div></div></div></td><td><div class="person-name">'+esc(c.name||"Campaign")+'</div><div class="person-sub">'+esc(c.owner||"")+'</div></td><td><span class="platform-tag">'+esc(s.platform)+'</span></td><td><a class="text-link" href="'+esc(safeHref(s.clipUrl)||"#")+'" target="_blank" rel="noopener noreferrer">Open post ↗</a></td><td class="self-reported">'+number(s.claimedViews)+'</td><td class="verified">'+number(s.verifiedViews)+'</td><td>'+statusBadge(s.status)+(s.risk?'<div style="margin-top:5px"><span class="risk-flag">Flag for review</span></div>':"")+'</td><td><div class="table-actions">'+(clipper?'<button class="btn btn-secondary btn-small" data-action="submission-details" data-id="'+esc(s.id)+'">Details</button>':'<button class="btn btn-secondary btn-small" data-action="review" data-id="'+esc(s.id)+'">Review</button><button class="btn btn-quiet btn-small" data-action="toggle-risk" data-id="'+esc(s.id)+'">'+(s.risk?"Clear flag":"Flag")+'</button>')+'</div></td></tr>';}).join("");
+      return head+demoNotice("<strong>Metric labels matter:</strong> “Views claimed” come from the clipper. “Verified views” are entered by a human reviewer; no social platform API is connected in this build.",false)+'<div class="panel">'+toolbar+(subs.length?'<div class="table-wrap"><table><thead><tr><th>Clipper</th><th>Campaign</th><th>Platform</th><th>Published post</th><th>Views claimed</th><th>Verified views</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty"><div class="empty-mark">▤</div><div class="empty-title">No submissions match this view</div><div class="empty-copy">'+(clipper?"Join a live campaign and share the public link to your published clip.":"New clip submissions will appear here for review.")+'</div>'+(clipper?'<button class="btn btn-primary btn-small" data-action="navigate" data-view="discover">Find a campaign</button>':"")+'</div>')+'</div><p class="footer-note">The preview records verification notes for auditability. It does not fetch view counts directly from Instagram, YouTube or TikTok.</p>';
+    }
+    function discoverPage(){
+      var enrolled=app.data.enrollments.filter(function(e){return e.clipperId===app.userId;}).length;
+      return pageHead("Clipper portal","Find your next campaign","Each live campaign shows the brief and the exact payout unit before you join.",'<button class="btn btn-secondary" data-action="new-user">Create clipper profile</button>')+
+        demoNotice("<strong>Campaign access:</strong> only published briefs appear here. The sample creator campaign stays hidden until its source content and payout terms are confirmed.",false)+
+        '<div class="grid stats-grid">'+stat("Open campaigns",app.data.campaigns.filter(function(c){return c.status==="live";}).length,"Live briefs available","◉")+stat("Your joined briefs",enrolled,"Join before submitting","✓")+stat("Published posts",clipperSubmissions().length,"You can submit a public link","▤")+stat("Profile status",esc((user(app.userId)||{}).status||"active"),"Demo profile · update via profile","◎")+'</div>'+
+        '<div class="page-tools"><div class="searchbox"><span class="search-icon">⌕</span><input id="campaignSearch" type="search" placeholder="Search live campaigns" value="'+esc(app.search)+'" aria-label="Search campaigns"></div><span class="subtle">Browse, join, then submit your clip</span></div>'+
+        '<div class="campaign-grid">'+visibleCampaigns().map(campaignCard).join("")+'</div>';
+    }
+    function clippersPage(){
+      var list=app.data.users.filter(function(u){return u.role==="clipper"||u.role==="business"||u.role==="creator";});
+      if(app.search){var q=app.search.toLowerCase();list=list.filter(function(u){return (u.name+" "+u.email+" "+u.role).toLowerCase().indexOf(q)>=0;});}
+      var rows=list.map(function(u){var count=app.data.submissions.filter(function(s){return s.clipperId===u.id;}).length;return '<tr><td><div class="person-cell"><div class="mini-avatar">'+esc(initials(u.name))+'</div><div><div class="person-name">'+esc(u.name)+'</div><div class="person-sub">'+esc(u.email)+'</div></div></div></td><td><span class="user-role">'+esc(u.role)+'</span></td><td>'+esc(u.handle||u.businessType||"—")+'</td><td>'+count+'</td><td>'+statusBadge(u.status||"active")+'</td><td>'+(u.role==="clipper"&&u.status==="pending"?'<button class="btn btn-secondary btn-small" data-action="approve-user" data-id="'+esc(u.id)+'">Approve profile</button>':u.role==="clipper"?'<button class="btn btn-quiet btn-small" data-action="suspend-user" data-id="'+esc(u.id)+'">'+(u.status==="suspended"?"Reactivate":"Suspend")+'</button>':'—')+'</td></tr>';}).join("");
+      return pageHead("Platform accounts","Users & clippers","Review registrations from brands, founders, podcast teams and clippers; change access deliberately.",'<button class="btn btn-primary" data-action="new-user">＋ Register account</button>')+
+        demoNotice("<strong>Demo registration only.</strong> This preview does not create real credentials or verify email, tax details or UPI accounts.",true)+
+        '<div class="panel"><div class="toolbar"><div class="searchbox"><span class="search-icon">⌕</span><input id="userSearch" type="search" placeholder="Search people or teams" value="'+esc(app.search)+'" aria-label="Search users"></div><span class="subtle">'+list.length+' registered profiles</span></div><div class="table-wrap"><table><thead><tr><th>Account</th><th>Role</th><th>Profile</th><th>Clips</th><th>Status</th><th>Action</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    }
+    function payoutsPage(){
+      var rows=payoutRows();if(app.role==="clipper")rows=rows.filter(function(r){return r.submission.clipperId===app.userId;});if(app.role==="business")rows=rows.filter(function(r){return r.campaign&&r.campaign.ownerId===app.userId;});
+      var total=rows.filter(function(r){return !r.fullyPaid&&!r.locked;}).reduce(function(t,r){return t+r.remaining;},0),paid=rows.reduce(function(t,r){return t+r.paid;},0);
+      var extras=app.role==="clipper"?payoutMethodPanel():app.role==="admin"?payoutMethodReviewPanel():"";
+      var body=rows.map(function(r){var s=r.submission,paidLabel=r.fullyPaid?'<span class="badge badge-paid">Recorded paid</span>':r.paid>0?'<span class="badge badge-review">Partially paid</span>':'<span class="badge badge-pending">Unpaid</span>';return '<tr><td><div class="person-cell"><div class="mini-avatar">'+esc(initials(s.clipperName))+'</div><div><div class="person-name">'+esc(s.clipperName)+'</div><div class="person-sub">'+esc(s.handle)+'</div></div></div></td><td>'+esc(r.campaign?r.campaign.name:"Campaign")+'</td><td class="amount">'+money(r.base)+'</td><td class="amount">'+(r.needsAllocation?money(r.bonus)+' · pool open':money(r.bonus))+'</td><td><strong class="amount">'+money(r.total)+'</strong><div class="person-sub">'+(r.paid>0?"Paid "+money(r.paid)+" · ":"")+"Due "+money(r.remaining)+'</div></td><td>'+(r.locked?(s.risk?'<span class="badge badge-hold">Risk review hold</span>':'<span class="badge badge-hold">Terms incomplete</span>'):r.needsAllocation?'<span class="badge badge-review">Bonus allocation open</span>':paidLabel)+'</td><td>'+(app.role!=="clipper"&&!r.fullyPaid&&!r.locked?(r.needsAllocation?'<button class="btn btn-secondary btn-small" data-action="allocate-bonus" data-id="'+esc(s.id)+'">Allocate bonus</button>':'<button class="btn btn-secondary btn-small" data-action="mark-paid" data-id="'+esc(s.id)+'">Record payout</button>'):"")+'</td></tr>';}).join("");
+      return pageHead(app.role==="clipper"?"Earnings":"Payout ledger",app.role==="clipper"?"Your earnings":"Payout ledger","Approved clips only. Each amount shows the calculation inputs and status before anyone records a payout.",app.role==="clipper"?"":'<button class="btn btn-secondary" data-action="export-payouts">Export ledger CSV</button>')+
+        demoNotice("<strong>No payments are sent by this prototype.</strong> “Record payout” saves a manual reference for reconciliation only. Connect and test a compliant payout provider before real transfers.",true)+
+        '<div class="grid stats-grid">'+stat("Ready to reconcile",money(total),"Approved, unlocked and not fully paid","₹")+stat("Recorded as paid",money(paid),"Local ledger record only","✓")+stat("Approved clips",rows.length,"May include payout holds","▤")+stat("Payout holds",rows.filter(function(r){return r.locked;}).length,"Terms incomplete or flagged for review","!")+'</div>'+
+        extras+'<div class="panel"><div class="panel-head"><div><div class="panel-title">Clip-level ledger</div><div class="panel-sub">INR estimate · amounts can change after verification</div></div><span class="subtle">No connected payout account</span></div>'+(rows.length?'<div class="table-wrap"><table><thead><tr><th>Clipper</th><th>Campaign</th><th>Base earned</th><th>Bonus</th><th>Total</th><th>Status</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>':'<div class="empty"><div class="empty-mark">₹</div><div class="empty-title">No approved clips yet</div><div class="empty-copy">Approved clips will show here once the campaign payout unit is confirmed.</div></div>')+'</div>'+receiptHistoryPanel();
+    }
+    function insightsPage(){
+      var camps=statusCampaigns(),claimed=app.data.submissions.reduce(function(t,s){return t+(Number(s.claimedViews)||0);},0),verified=app.data.submissions.reduce(function(t,s){return t+(Number(s.verifiedViews)||0);},0),approved=app.data.submissions.filter(function(s){return s.status==="approved";}).length;
+      return pageHead("Reporting","Performance insights","Separate submitted claims, manually checked reach, approved clips and campaign payout exposure.",'<button class="btn btn-secondary" data-action="export-insights">Export summary CSV</button>')+
+        demoNotice("<strong>Verified does not mean platform API verified.</strong> A human reviewer enters the checked view count and an optional note; this prototype has no Instagram, YouTube or TikTok connection.",false)+
+        '<div class="grid stats-grid">'+stat("Reported views",shortNumber(claimed),"Submitted by clippers","◌")+stat("Verified views",shortNumber(verified),"Manually reviewed only","✓")+stat("Verification coverage",claimed?Math.round(verified/claimed*100)+"%":"0%","Verified ÷ reported (sample totals)","↗")+stat("Approved clips",approved,"Creative approval state","▤")+'</div>'+
+        '<div class="grid split"><div class="panel"><div class="panel-head"><div><div class="panel-title">Reported vs verified</div><div class="panel-sub">By campaign · sample-only data</div></div></div><div class="panel-body">'+chart(camps)+'</div></div><div class="panel"><div class="panel-head"><div><div class="panel-title">Campaign performance</div><div class="panel-sub">Views are not guaranteed reach</div></div></div><div class="panel-body">'+(camps.map(function(c){var sub=app.data.submissions.filter(function(s){return s.campaignId===c.id;}),cl=sub.reduce(function(t,s){return t+(Number(s.claimedViews)||0);},0),ve=sub.reduce(function(t,s){return t+(Number(s.verifiedViews)||0);},0);return '<div class="campaign-row"><div class="campaign-main"><div class="cover">'+esc(initials(c.owner))+'</div><div style="min-width:0"><div class="campaign-name">'+esc(c.name)+'</div><div class="campaign-meta">'+sub.length+' submitted clips</div></div></div><div class="row-number verified">'+shortNumber(ve)+'<small class="self-reported">of '+shortNumber(cl)+' reported</small></div></div>';}).join("")||'<div class="empty-title">No campaigns</div>')+'</div></div></div>';
+    }
+    function adminPage(){
+      var audit=app.data.audit||[],accounts=app.data.users.length,pending=app.data.users.filter(function(u){return u.status==="pending";}).length,flagged=app.data.submissions.filter(function(s){return s.risk;}).length;
+      return pageHead(app.role==="admin"?"Platform administration":"Business workspace","Admin center","A compact operations room for registrations, risk flags, audit history and preview controls.",app.role==="admin"?'<button class="btn btn-primary" data-action="new-user">＋ Register account</button>':'<button class="btn btn-secondary" data-action="new-user">Add teammate</button>')+
+        demoNotice("<strong>Before real launch:</strong> add secure authentication, role-based server permissions, database backups, private media storage, moderation rules and a payout-provider integration.",true)+
+        '<div class="grid stats-grid">'+stat("Registered accounts",accounts,"Admin, business, creator and clipper","◎")+stat("Profiles to review",pending,"Admin can approve clipper access","!")+stat("Risk flags",flagged,"Check before approving a clip","⚑")+stat("Audit entries",audit.length,"Recent actions in this browser","◷")+'</div>'+
+        '<div class="grid split"><div class="panel"><div class="panel-head"><div><div class="panel-title">Account governance</div><div class="panel-sub">Businesses and creators can self-register; admin manages access.</div></div><button class="text-link" data-action="navigate" data-view="'+(app.role==="admin"?"clippers":"campaigns")+'">'+(app.role==="admin"?"Manage users →":"Manage campaigns →")+'</button></div><div class="panel-body"><div class="toggle-line"><div class="toggle-copy">Business & creator workspaces<small>Separate campaign ownership and asset libraries</small></div><span class="badge badge-live">Available in preview</span></div><div class="toggle-line"><div class="toggle-copy">Clipper registration & profiles<small>Handles, joined campaigns and submission history</small></div><span class="badge badge-live">Available in preview</span></div><div class="toggle-line"><div class="toggle-copy">Human review & view verification<small>Approval, revision, rejection and verified counts</small></div><span class="badge badge-review">Manual review</span></div><div class="toggle-line"><div class="toggle-copy">Payout transfer<small>Ledger only; no payment provider connected</small></div><span class="badge badge-hold">Not connected</span></div><div style="margin-top:14px"><button class="btn btn-secondary btn-small" data-action="reset-demo">Reset demo data</button></div></div></div><div class="panel"><div class="panel-head"><div><div class="panel-title">Audit trail</div><div class="panel-sub">Local demo record of recent changes</div></div></div><div class="panel-body"><div class="audit-list">'+(audit.length?audit.slice(0,8).map(function(a){return '<div class="audit-row"><div class="audit-time">'+esc(a.at)+'</div><div class="audit-copy">'+esc(a.text)+'</div></div>';}).join(""):'<div class="empty-title">No recent activity</div>')+'</div></div></div></div>'+
+        '<p class="footer-note">Reset restores sample content only. It does not delete browser data outside this website.</p>';
+    }
+    function profilePage(){
+      var u=currentUser()||{},my=clipperSubmissions(),enrolled=app.data.enrollments.filter(function(e){return e.clipperId===u.id;}).length;
+      return pageHead("Clipper profile","Your public profile","Add the handle clippers use for campaign work. Keep private payout details out of public profile fields.",'<button class="btn btn-primary" data-action="edit-profile">Edit profile</button>')+
+        demoNotice("<strong>Privacy note:</strong> this prototype stores profile fields in your browser only. Do not enter real bank, Aadhaar, PAN or UPI details here.",true)+
+        '<div class="grid split"><div class="panel"><div class="panel-head"><div><div class="panel-title">Profile information</div></div>'+statusBadge(u.status||"active")+'</div><div class="panel-body"><div class="person-cell" style="margin-bottom:18px"><div class="mini-avatar" style="width:42px;height:42px;font-size:13px">'+esc(initials(u.name))+'</div><div><div class="person-name" style="font-size:14px">'+esc(u.name||"Clipper")+'</div><div class="person-sub">'+esc(u.email||"")+'</div></div></div><div class="rule-box"><div class="rule-title">Public handle</div><div class="rule-value">'+esc(u.handle||"Add a social handle")+'</div></div><div class="rule-box"><div class="rule-title">Campaigns joined</div><div class="rule-value">'+enrolled+'</div></div><div class="rule-box"><div class="rule-title">Clip submissions</div><div class="rule-value">'+my.length+'</div></div></div></div><div class="panel"><div class="panel-head"><div><div class="panel-title">How tracking works</div></div></div><div class="panel-body"><div class="rule-box"><div class="rule-title">1 · Publish your clip</div><div class="rule-note">Add the live public post URL and link it to the authorised source.</div></div><div class="rule-box"><div class="rule-title">2 · Views start as reported</div><div class="rule-note">The count you submit is labelled as a claim, not verified reach.</div></div><div class="rule-box"><div class="rule-title">3 · Team verifies & reviews</div><div class="rule-note">Approved clips and verified metrics feed the visible ledger.</div></div></div></div></div>';
+    }
+    function mainPage(){
+      if(app.view==="overview")return app.role==="admin"?adminOverview():app.role==="business"?businessOverview():clipperOverview();
+      if(app.view==="campaigns")return campaignPage();
+      if(app.view==="content")return contentPage();
+      if(app.view==="submissions")return submissionsPage();
+      if(app.view==="discover")return discoverPage();
+      if(app.view==="clippers")return clippersPage();
+      if(app.view==="payouts")return payoutsPage();
+      if(app.view==="insights")return insightsPage();
+      if(app.view==="admin")return adminPage();
+      if(app.view==="profile")return profilePage();
+      return adminOverview();
+    }
+    function field(name,label,type,value,opts){
+      opts=opts||{};var req=opts.required?'<span class="required"> *</span>':"",help=opts.help?'<span class="field-help">'+opts.help+'</span>':"",html="";
+      if(type==="select"){html='<select id="f-'+name+'" name="'+name+'" '+(opts.required?"required":"")+'>'+opts.options.map(function(o){return '<option value="'+esc(o[0])+'" '+(String(o[0])===String(value)?"selected":"")+'>'+esc(o[1])+'</option>';}).join("")+'</select>';}
+      else if(type==="textarea"){html='<textarea id="f-'+name+'" name="'+name+'" placeholder="'+esc(opts.placeholder||"")+'" '+(opts.required?"required":"")+'>'+esc(value||"")+'</textarea>';}
+      else{html='<input id="f-'+name+'" name="'+name+'" type="'+type+'" value="'+esc(value==null?"":value)+'" placeholder="'+esc(opts.placeholder||"")+'" '+(opts.required?"required":"")+(opts.min!=null?' min="'+opts.min+'"':"")+(opts.max!=null?' max="'+opts.max+'"':"")+(opts.step?' step="'+opts.step+'"':"")+'>';}
+      return '<div class="field '+(opts.full?"full":"")+'"><label for="f-'+name+'">'+esc(label)+req+'</label>'+html+help+'</div>';
+    }
+    function campaignModal(){
+      var c=app.editingId?campaign(app.editingId):null,isEdit=!!c,u=currentUser();
+      c=c||{name:"",owner:app.role==="business"?u.name:"",ownerId:app.role==="business"?u.id:"",ownerType:app.role==="business"?(u.businessType||"Business"):"Brand / creator",category:"Podcast",description:"",sourceUrl:"",rate:40,rateUnit:"",bonus1:0,threshold1:1000000,bonus2:0,threshold2:5000000,bonusScope:"",bonusStacking:"",bonusAllocation:"",platforms:["Instagram Reels","YouTube Shorts"]};
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title" id="modalTitle">'+(isEdit?"Edit campaign":"Create a campaign")+'</div><div class="modal-subtitle">A clear brief builds trust. Saving a draft never activates payable terms.</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><form id="campaignForm"><div class="modal-body"><div class="field-grid">'+field("name","Campaign name","text",c.name,{required:true,placeholder:"e.g. Podcast episode clips"})+field("owner","Business, creator or podcast","text",c.owner,{required:true,placeholder:"Workspace / creator name"})+field("ownerType","Account type","select",c.ownerType,{options:[["Brand","Brand"],["Founder","Founder"],["Creator / podcast","Creator / podcast"],["Podcast team","Podcast team"],["Business","Business"],["Agency","Agency"]]})+field("category","Content category","text",c.category,{placeholder:"e.g. Business podcast"})+field("description","Clipping brief","textarea",c.description,{full:true,placeholder:"What content to clip, audience, tone, platforms, do/don'ts and review criteria",required:true})+field("sourceUrl","Authorised source URL","url",c.sourceUrl,{full:true,placeholder:"https://…",help:"Paste the episode/video URL clippers may use. Add more references in Content library."})+'</div><div class="divider-label">Rate & rewards · INR</div><div class="field-grid">'+field("rate","Base rate (₹)","number",c.rate,{required:true,min:0,step:"0.01",help:"Set the amount; publishing also requires an explicit rate unit."})+field("rateUnit","Pay unit","select",c.rateUnit,{required:true,options:[["","Choose the unit — required"],["per_clip","Per approved clip"],["per_click","Per verified click"],["per_1k_views","Per 1,000 verified views"]],help:"Choose a clear pay unit before publishing."})+field("bonus1","1st milestone bonus (₹)","number",c.bonus1,{min:0,step:"0.01"})+field("threshold1","1st milestone (views)","number",c.threshold1,{min:0,step:"1"})+field("bonus2","2nd milestone bonus (₹)","number",c.bonus2,{min:0,step:"0.01"})+field("threshold2","2nd milestone (views)","number",c.threshold2,{min:0,step:"1"})+field("bonusScope","Milestone scope","select",c.bonusScope,{options:[["","Choose scope — required if bonuses apply"],["clip","Each approved clip"],["campaign","Total verified campaign views"]],help:"If campaign total, pick how the reward pool is shared."})+field("bonusStacking","If both thresholds are reached","select",c.bonusStacking,{options:[["","Choose stacking — required if bonuses apply"],["highest","Pay highest milestone only"],["cumulative","Add milestones together"]]})+field("bonusAllocation","Campaign bonus allocation","select",c.bonusAllocation,{options:[["","Choose if scope is campaign-wide"],["equal","Split equally across eligible clippers"],["proportional","Split by each clipper's verified views"],["top","Award to top verified clipper"],["manual","Admin allocates manually"]],help:"Only applies when milestone scope is campaign-wide."})+'</div><div class="divider-label">Publishing checklist</div><label class="field-check"><input type="checkbox" name="confirmBrief" '+(isEdit&&c.confirmBrief?"checked":"")+'><span>I confirm the source is authorised, the brief is accurate, and the published rate / bonus terms are correct.</span></label><div class="field-help" style="margin-top:8px">The app will keep this campaign as a draft until all required terms and a valid source are present.</div><input type="hidden" name="editingId" value="'+esc(c.id||"")+'"></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><div style="display:flex;gap:8px"><button type="submit" class="btn btn-secondary" name="submitAction" value="draft">Save draft</button><button type="submit" class="btn btn-primary" name="submitAction" value="publish">Publish campaign</button></div></div></form></section></div>';
+    }
+    function contentModal(){
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">Add source content</div><div class="modal-subtitle">Save a reusable video/episode link or pick a local file reference.</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><form id="assetForm"><div class="modal-body"><div class="field-grid">'+field("title","Content title","text","",{required:true,placeholder:"e.g. Episode 14 — founder story"})+field("platform","Source platform","select","YouTube",{options:[["YouTube","YouTube"],["Instagram","Instagram"],["TikTok","TikTok"],["Drive","Google Drive / Dropbox"],["Other","Other"]]})+field("url","Source URL","url","",{full:true,placeholder:"https://…",help:"A link is easiest for clippers to use."})+'<div class="field full"><label for="localFile">Optional local video file reference</label><input id="localFile" name="localFile" type="file" accept="video/*"><span class="field-help">This demo saves the file name only; it does not upload or persist video data.</span></div>'+field("notes","Internal notes","textarea","",{full:true,placeholder:"Usage rights, excerpt boundaries, context, or edit references"})+'</div></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><button type="submit" class="btn btn-primary">Save content</button></div></form></section></div>';
+    }
+    function registerModal(){
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">Register an account</div><div class="modal-subtitle">Create a demo workspace for a brand, founder, podcast team or clipper.</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><form id="registerForm"><div class="modal-body"><div class="field-grid">'+field("name","Name or business name","text","",{required:true,placeholder:"Your name / team"})+field("email","Email","email","",{required:true,placeholder:"name@example.com"})+field("role","Register as","select","business",{options:[["business","Business / brand"],["creator","Founder / creator / podcast"],["clipper","Clipper"]]})+field("businessType","Workspace type","select","Brand",{options:[["Brand","Brand"],["Founder","Founder"],["Creator / podcast","Creator / podcast"],["Podcast team","Podcast team"],["Agency","Agency"]]})+field("handle","Social handle (clippers)","text","",{placeholder:"@yourhandle",help:"Optional for registration; editable in your profile."})+'<div class="field full"><div class="notice notice-warn" style="margin:0"><span class="notice-icon">!</span><div>Preview accounts are not real logins. Do not enter passwords or financial identity details. Production needs authentication, verification and role permissions.</div></div></div></div></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><button type="submit" class="btn btn-primary">Create demo account</button></div></form></section></div>';
+    }
+    function submissionModal(){
+      var live=app.data.campaigns.filter(function(c){return c.status==="live";}),sel=app.editingId||((live[0]||{}).id)||"";
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">Submit a published clip</div><div class="modal-subtitle">Share the public post link and source; reported views are not verified automatically.</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div>'+(live.length?'<form id="submissionForm"><div class="modal-body"><div class="field-grid">'+field("campaignId","Campaign","select",sel,{required:true,options:live.map(function(c){return [c.id,c.name+" · "+money(c.rate)+" "+unitLabel(c.rateUnit)];})})+field("platform","Published on","select","Instagram Reels",{options:[["Instagram Reels","Instagram Reels"],["YouTube Shorts","YouTube Shorts"],["TikTok","TikTok"],["Other","Other"]]})+field("clipUrl","Public clip URL","url","",{required:true,full:true,placeholder:"https://…"})+field("sourceUrl","Original source URL","url","",{required:true,full:true,placeholder:"https://…"})+field("claimedViews","Views shown on platform","number",0,{min:0,step:"1",help:"Self-reported only until reviewed."})+field("claimedClicks","Attributable clicks (if campaign pays per click)","number",0,{min:0,step:"1",help:"A manual claim; reviewer enters verified clicks."})+'<div class="field full"><label for="proofFile">Optional screenshot / evidence reference</label><input id="proofFile" name="proofFile" type="file" accept="image/*"><span class="field-help">This prototype records a filename only. No image is uploaded.</span></div></div></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><button type="submit" class="btn btn-primary">Submit for review</button></div></form>':'<div class="modal-body"><div class="empty"><div class="empty-title">No live campaigns to submit to</div><div class="empty-copy">Join a published campaign first. Drafts are not available to clippers.</div></div></div><div class="modal-foot"><button class="btn btn-secondary" data-action="close-modal">Close</button></div>')+'</section></div>';
+    }
+    function reviewModal(){
+      var s=app.data.submissions.find(function(x){return x.id===app.editingId;});if(!s)return "";
+      var c=campaign(s.campaignId)||{};
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">Review clip submission</div><div class="modal-subtitle">'+esc(s.clipperName)+' · '+esc(c.name||"Campaign")+' · '+esc(s.platform)+'</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><form id="reviewForm"><div class="modal-body"><div class="two-col"><div><div class="rule-box"><div class="rule-title">Published post</div><div class="rule-value"><a href="'+esc(safeHref(s.clipUrl)||"#")+'" target="_blank" rel="noopener noreferrer">Open post link ↗</a></div></div><div class="rule-box"><div class="rule-title">Source material</div><div class="rule-value"><a href="'+esc(safeHref(s.sourceUrl)||"#")+'" target="_blank" rel="noopener noreferrer">Open source link ↗</a></div></div><div class="rule-box"><div class="rule-title">Views claimed by clipper</div><div class="rule-value self-reported">'+number(s.claimedViews)+'</div><div class="rule-note">This is not the verified view count.</div></div><div class="rule-box"><div class="rule-title">Current review status</div><div class="rule-value">'+statusBadge(s.status)+'</div></div></div><div><div class="field-grid" style="grid-template-columns:1fr">'+field("verifiedViews","Verified views","number",s.verifiedViews,{min:0,step:"1",help:"Human-checked count only; keep it separate from the clipper's claim."})+field("verifiedClicks","Verified attributable clicks","number",s.verifiedClicks||0,{min:0,step:"1",help:"Required for per-click campaigns; manual review only."})+field("reviewNote","Decision / verification note","textarea",s.reviewNote||"",{placeholder:"What was checked? Why revision/rejection?"})+'</div><input type="hidden" name="reviewStatus" id="reviewStatus" value="'+esc(s.status)+'"></div></div><div class="notice notice-warn" style="margin:14px 0 0"><span class="notice-icon">!</span><div>Verified metrics and approval require a human. This page does not read social-platform data.</div></div></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="btn btn-danger btn-small" data-action="set-review-status" data-status="rejected">Reject</button><button type="button" class="btn btn-secondary btn-small" data-action="set-review-status" data-status="revision">Request revision</button><button type="button" class="btn btn-lime btn-small" data-action="set-review-status" data-status="approved">Approve clip</button></div></div></form></section></div>';
+    }
+    function payoutMethodModal(){
+      var existing=payoutMethodFor(app.userId),type=existing?existing.type:"upi";
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">Submit a payout method</div><div class="modal-subtitle">An admin must review it before the demo ledger allows a payout record.</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><form id="payoutMethodForm"><div class="modal-body"><div class="field-grid">'+field("methodType","Method type","select",type,{required:true,options:[["upi","UPI · demo alias only"],["bank","Bank account · demo suffix only"]]})+field("upiId","Fake UPI alias","text","",{placeholder:"clipper.demo@upi",help:"Use a made-up value. The full alias is discarded; only a masked label is saved."})+field("bankName","Sample bank label","select","sample-bank",{options:[["sample-bank","Sample Bank"],["demo-bank","Demo Bank"]],help:"Fictional labels only; no IFSC or account-holder data is collected."})+field("bankLast4","Fake account last 4 digits","text","",{placeholder:"1234",help:"Four demo digits only—never enter a full account number."})+'<div class="field full"><div class="notice notice-warn" style="margin:0"><span class="notice-icon">!</span><div>Public demo safety: do not enter real UPI, bank, IFSC, UTR, Aadhaar or PAN details. The preview stores only a masked label in this browser; this is not a secure payment profile.</div></div></div></div></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><button type="submit" class="btn btn-primary">Submit for admin review</button></div></form></section></div>';
+    }
+    function payoutModal(){
+      var s=app.data.submissions.find(function(x){return x.id===app.editingId;}),method=s&&payoutMethodFor(s.clipperId);
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">Record manual payment</div><div class="modal-subtitle">The transfer happens outside Clipsetu; this only records it for the clipper.</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><form id="payoutForm"><div class="modal-body"><div class="rule-box"><div class="rule-title">Approved payout method</div><div class="rule-value">'+(method?esc(method.label)+" · "+esc(method.type.toUpperCase()):"No approved method")+'</div><div class="rule-note">Only the masked demo label is available; no real account detail is stored.</div></div><div class="field-grid" style="margin-top:13px">'+field("reference","Fake payment reference","text","",{required:true,full:true,placeholder:"e.g. DEMO-REF-1234",help:"Only the last four characters are saved in this preview."})+field("paidAmount","Amount manually paid (₹)","number",0,{required:true,min:0,step:"0.01",full:true})+'<div class="field full"><label for="receiptFile">Receipt screenshot · temporary preview</label><input id="receiptFile" name="receiptFile" type="file" accept="image/png,image/jpeg,image/webp"><span class="field-help">Use a fake/redacted image only. It stays in this browser session and is not uploaded or persisted.</span></div><div class="field full"><div class="notice notice-warn" style="margin:0"><span class="notice-icon">!</span><div>Record only a transfer already made outside this demo. No money is sent. In production, receipts need private storage and authenticated clipper-only access.</div></div></div><input type="hidden" name="submissionId" value="'+esc(app.editingId)+'"></div></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><button type="submit" class="btn btn-primary">Save manual record</button></div></form></section></div>';
+    }
+    function allocationModal(){
+      var s=app.data.submissions.find(function(x){return x.id===app.editingId;}),c=s&&campaign(s.campaignId);if(!s||!c)return "";
+      var pool=aggregateBonusPool(c),otherAllocated=app.data.bonusAllocations.filter(function(a){return a.campaignId===c.id&&a.submissionId!==s.id;}).reduce(function(t,a){return t+(Number(a.amount)||0);},0),remaining=Math.max(0,pool-otherAllocated),current=app.data.bonusAllocations.find(function(a){return a.submissionId===s.id;});
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">Allocate campaign bonus</div><div class="modal-subtitle">'+esc(c.name)+' · assign part of an earned campaign-wide reward pool.</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><form id="allocationForm"><div class="modal-body"><div class="rule-box"><div class="rule-title">Milestone pool</div><div class="rule-value">'+money(pool)+'</div><div class="rule-note">Available for this clip: '+money(remaining)+(current?" · currently assigned here: "+money(current.amount):"")+'. The pool is based on approved clips with verified views.</div></div><div class="rule-box"><div class="rule-title">Recipient</div><div class="rule-value">'+esc(s.clipperName)+' · '+esc(s.handle)+'</div><div class="rule-note">Clip link: <a href="'+esc(safeHref(s.clipUrl)||"#")+'" target="_blank" rel="noopener noreferrer">open post ↗</a></div></div><div class="field-grid" style="margin-top:13px">'+field("allocationAmount","Total bonus assigned to this clip (₹)","number",Math.min(remaining,Number(current&&current.amount)||remaining),{required:true,min:0.01,max:remaining,step:"0.01",full:true,help:"This replaces the amount currently assigned to this clip; the full campaign pool cannot be exceeded."})+'<input type="hidden" name="submissionId" value="'+esc(s.id)+'"></div><div class="notice notice-warn" style="margin:12px 0 0"><span class="notice-icon">!</span><div>Allocation updates the demo ledger only; this does not initiate a payment.</div></div></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><button type="submit" class="btn btn-primary">Save allocation</button></div></form></section></div>';
+    }
+    function profileModal(){
+      var u=currentUser()||{};
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">Edit clipper profile</div><div class="modal-subtitle">Use public-facing profile details only; never store identity documents here.</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><form id="profileForm"><div class="modal-body"><div class="field-grid">'+field("name","Display name","text",u.name,{required:true})+field("handle","Public social handle","text",u.handle||"",{placeholder:"@yourhandle"})+field("email","Email (demo only)","email",u.email||"",{required:true})+'<div class="field full"><div class="notice notice-warn" style="margin:0"><span class="notice-icon">!</span><div>No bank / UPI / Aadhaar / PAN details in this preview.</div></div></div></div></div><div class="modal-foot"><button type="button" class="btn btn-quiet" data-action="close-modal">Cancel</button><button type="submit" class="btn btn-primary">Save profile</button></div></form></section></div>';
+    }
+    function detailsModal(){
+      var c=campaign(app.editingId);if(!c)return "";
+      return '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div><div class="modal-title">'+esc(c.name)+'</div><div class="modal-subtitle">'+esc(c.owner)+' · '+esc(c.category||"Campaign")+'</div></div><button class="close-btn" data-action="close-modal" aria-label="Close">×</button></div><div class="modal-body"><div class="rule-box"><div class="rule-title">Campaign brief</div><div class="rule-value" style="font-weight:520">'+esc(c.description||"No description added.")+'</div></div><div class="rule-box"><div class="rule-title">Payout terms</div><div class="rule-value">'+esc(campaignTerms(c))+'</div><div class="rule-note">Only verified metrics and approved clips contribute to the ledger.</div></div><div class="rule-box"><div class="rule-title">Source content</div><div class="rule-value">'+(safeHref(c.sourceUrl)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(safeHref(c.sourceUrl))+'">Open authorised source ↗</a>':'No source link added')+'</div></div><div class="rule-box"><div class="rule-title">Allowed platforms</div><div class="rule-value">'+esc((c.platforms||[]).join(", ")||"As defined in brief")+'</div></div>'+(!campaignReady(c)?'<div class="notice notice-warn" style="margin:12px 0 0"><span class="notice-icon">!</span><div>Not ready to publish: add an authorised source URL and explicitly confirm payout rules.</div></div>':"")+'</div><div class="modal-foot"><button class="btn btn-quiet" data-action="close-modal">Close</button><div style="display:flex;gap:7px">'+(app.role!=="clipper"?'<button class="btn btn-secondary" data-action="edit-campaign" data-id="'+esc(c.id)+'">Edit brief</button>':"")+(c.status==="live"&&app.role==="clipper"?' <button class="btn btn-primary" data-action="join-campaign" data-id="'+esc(c.id)+'">Join campaign</button>':"")+'</div></div></section></div>';
+    }
+    function renderModal(){
+      if(!app.modal)return "";
+      if(app.modal==="campaign")return campaignModal();
+      if(app.modal==="asset")return contentModal();
+      if(app.modal==="register")return registerModal();
+      if(app.modal==="submission")return submissionModal();
+      if(app.modal==="review")return reviewModal();
+      if(app.modal==="payout")return payoutModal();
+      if(app.modal==="payout-method")return payoutMethodModal();
+      if(app.modal==="receipt")return receiptModal();
+      if(app.modal==="allocation")return allocationModal();
+      if(app.modal==="profile")return profileModal();
+      if(app.modal==="details")return detailsModal();
+      return "";
+    }
+    function render(){document.getElementById("app").innerHTML=shell(mainPage());}
+    function openModal(type,id){app.modal=type;app.editingId=id||"";render();}
+    function closeModal(){app.modal="";app.editingId="";app.reviewStatus="";render();}
+    function publishCheck(c){
+      if(!safeHref(c.sourceUrl))return "Add a valid authorised http(s) source URL before publishing.";
+      if(!c.confirmBrief)return "Confirm the source authorisation and campaign terms before publishing.";
+      if(!c.rateUnit)return "Choose whether the rate pays per approved clip, per verified click, or per 1,000 verified views.";
+      if((Number(c.bonus1)>0||Number(c.bonus2)>0)&&(!c.bonusScope||!c.bonusStacking||((Number(c.bonus1)>0)&&!(Number(c.threshold1)>0))||((Number(c.bonus2)>0)&&!(Number(c.threshold2)>0))))return "Choose valid milestone thresholds, scope and stacking rule.";
+      if(Number(c.bonus1)>0&&Number(c.bonus2)>0&&Number(c.threshold2)<=Number(c.threshold1))return "The second milestone threshold must be higher than the first.";
+      if(c.bonusScope==="campaign"&&!c.bonusAllocation)return "Choose how a campaign-wide bonus pool is allocated.";
+      return "";
+    }
+    function formValues(form){var fd=new FormData(form),o={};fd.forEach(function(v,k){if(k!=="localFile"&&k!=="proofFile"&&k!=="submitAction")o[k]=v;});return o;}
+    function handleCampaignSubmit(form,event){
+      event.preventDefault();var v=formValues(form),fileLink="",oldId=v.editingId;
+      var found=app.data.assets.find(function(a){return a.url&&a.url===v.sourceUrl;});
+      var c=oldId?campaign(oldId):null;
+      var item=Object.assign({},c||{},{
+        id:oldId||("c-"+Date.now()),name:v.name.trim(),owner:v.owner.trim(),ownerId:c?c.ownerId:(app.role==="business"?app.userId:(userByOwner(v.owner)||{}).id||app.userId),ownerType:v.ownerType,category:v.category.trim(),description:v.description.trim(),sourceUrl:v.sourceUrl.trim(),rate:Number(v.rate)||0,rateUnit:v.rateUnit,bonus1:Number(v.bonus1)||0,threshold1:Number(v.threshold1)||1000000,bonus2:Number(v.bonus2)||0,threshold2:Number(v.threshold2)||5000000,bonusScope:v.bonusScope,bonusStacking:v.bonusStacking,bonusAllocation:v.bonusAllocation,platforms:["Instagram Reels","YouTube Shorts"],confirmBrief:!!form.querySelector('[name="confirmBrief"]').checked,updatedAt:today(),isDemo:c?c.isDemo:false
+      });
+      var action=event.submitter&&event.submitter.value||"draft";
+      if(action==="publish"){
+        if(!item.confirmBrief){notify("Tick the authorisation and terms confirmation before publishing.");return;}
+        var issue=publishCheck(item);if(issue){notify(issue);return;}
+        item.status="live";addAudit('Campaign “'+item.name+'” published by '+(currentUser().name||"workspace owner")+".");
+      }else{item.status="draft";addAudit('Campaign “'+item.name+'” saved as a draft.');}
+      if(c){var ix=app.data.campaigns.findIndex(function(x){return x.id===oldId;});app.data.campaigns[ix]=item;}
+      else app.data.campaigns.unshift(item);
+      save();app.modal="";app.editingId="";app.view="campaigns";render();notify(action==="publish"?"Campaign published to the demo marketplace.":"Campaign draft saved.");
+    }
+    function userByOwner(name){return app.data.users.find(function(u){return u.name.toLowerCase()===String(name||"").toLowerCase()&&["business","creator"].indexOf(u.role)>=0;});}
+    function handleAssetSubmit(form,event){
+      event.preventDefault();var v=formValues(form),f=form.querySelector('[name="localFile"]').files[0];
+      if(!v.url&&!f){notify("Add a source URL or choose a local file reference.");return;}
+      var row={id:"a-"+Date.now(),title:v.title.trim(),platform:v.platform,url:v.url.trim(),ownerId:app.role==="business"?app.userId:currentUser().id,fileName:f?f.name:"",notes:v.notes||"",createdAt:today(),isDemo:false};
+      app.data.assets.unshift(row);addAudit("Content source “"+row.title+"” added to the library.");save();app.modal="";app.view="content";render();notify("Content reference added. A selected file was not uploaded.");
+    }
+    function handleRegister(form,event){
+      event.preventDefault();var v=formValues(form),id="u-"+Date.now(),u={id:id,name:v.name.trim(),email:v.email.trim(),role:v.role,businessType:v.businessType,handle:v.handle.trim(),status:v.role==="clipper"?"pending":"active",createdAt:today()};
+      app.data.users.unshift(u);app.userId=id;app.role=v.role==="clipper"?"clipper":"business";app.view="overview";addAudit(u.name+" registered as "+u.role+" in demo mode.");save();app.modal="";render();notify("Demo account created. No login credentials were created.");
+    }
+    function handleSubmissionSubmit(form,event){
+      event.preventDefault();var v=formValues(form),u=currentUser(),c=campaign(v.campaignId);if(!c||c.status!=="live"){notify("Choose a live campaign.");return;}
+      var post=safeHref(v.clipUrl),src=safeHref(v.sourceUrl);if(!post||!src){notify("Enter valid http(s) links for both your published clip and source.");return;}
+      var s={id:"s-"+Date.now(),campaignId:v.campaignId,clipperId:u.id,clipperName:u.name,handle:u.handle||"Clipper",platform:v.platform,clipUrl:post,sourceUrl:src,claimedViews:Number(v.claimedViews)||0,claimedClicks:Number(v.claimedClicks)||0,verifiedViews:0,verifiedClicks:0,status:"pending",submittedAt:today(),reviewNote:"",risk:false,fileName:(form.querySelector('[name="proofFile"]').files[0]||{}).name||"",isDemo:false};
+      app.data.submissions.unshift(s);addAudit(u.name+" submitted a clip for “"+c.name+"”.");save();app.modal="";app.view="submissions";app.filter="all";render();notify("Clip submitted for human review.");
+    }
+    function handleReviewSubmit(form,event){
+      event.preventDefault();var v=formValues(form),s=app.data.submissions.find(function(x){return x.id===app.editingId;});if(!s)return;
+      s.verifiedViews=Math.max(0,Number(v.verifiedViews)||0);s.verifiedClicks=Math.max(0,Number(v.verifiedClicks)||0);s.status=v.reviewStatus||"pending";s.reviewNote=(v.reviewNote||"").trim();s.reviewedAt=today();
+      addAudit("Submission from "+s.clipperName+" marked "+s.status+"; verified "+number(s.verifiedViews)+" views and "+number(s.verifiedClicks)+" clicks.");
+      save();app.modal="";app.editingId="";render();notify(s.status==="approved"?"Clip approved; earnings follow the published terms.":"Review decision saved.");
+    }
+    function handlePayoutMethodSubmit(form,event){
+      event.preventDefault();if(app.role!=="clipper"){notify("Only a clipper can submit their demo payout method.");return;}
+      var v=formValues(form),type=v.methodType,label="";
+      if(type==="upi"){label=maskedUpi(v.upiId);if(!label){notify("Enter a fake demo UPI alias such as clipper.demo@upi.");return;}}
+      else if(type==="bank"){var suffix=String(v.bankLast4||"").replace(/\D/g,"");if(!/^\d{4}$/.test(suffix)){notify("Enter exactly four fake demo digits, not a full account number.");return;}label=(v.bankName==="demo-bank"?"Demo Bank":"Sample Bank")+" · •••• "+suffix;}
+      else{notify("Choose UPI or bank account.");return;}
+      var method={id:"pm-"+Date.now(),clipperId:app.userId,type:type,label:label,status:"pending",submittedAt:today(),reviewNote:"Awaiting admin review."};
+      app.data.payoutMethods=(app.data.payoutMethods||[]).filter(function(m){return m.clipperId!==app.userId;});app.data.payoutMethods.unshift(method);
+      addAudit(currentUser().name+" submitted a masked demo payout method for admin review.");save();app.modal="";app.view="payouts";render();notify("Masked demo method submitted; admin review is pending.");
+    }
+    function handlePayoutMethodDecision(id,status){
+      if(app.role!=="admin"){notify("Only the admin demo role can review payout methods.");return;}
+      var method=(app.data.payoutMethods||[]).find(function(m){return m.id===id;});if(!method||method.status!=="pending"||(status!=="approved"&&status!=="rejected"))return;
+      method.status=status;method.reviewNote=status==="approved"?"Approved in demo review; only a masked label is stored.":"Rejected in demo review; submit a corrected demo method.";method.reviewedAt=today();
+      addAudit("Masked payout method for "+(user(method.clipperId)||{}).name+" marked "+status+".");save();render();notify("Demo payout method "+status+"; no payment was sent.");
+    }
+    function handlePayoutSubmit(form,event){
+      event.preventDefault();if(app.role!=="admin"){notify("Only an admin can record a manual payment in this demo.");return;}
+      var v=formValues(form),s=app.data.submissions.find(function(x){return x.id===v.submissionId;}),row=payoutRows().find(function(r){return r.submission.id===v.submissionId;}),method=s&&payoutMethodFor(s.clipperId);
+      if(!s||!row||row.locked){notify("This payout is not ready; check its published terms.");return;}
+      if(!method||method.status!=="approved"){notify("Approve the clipper's payout method before recording payment.");return;}
+      if(row.needsAllocation){notify("Allocate the campaign bonus pool before recording this clip's payout.");return;}
+      var amount=Math.max(0,Number(v.paidAmount)||0);if(amount===0){notify("Enter the amount already paid outside this demo.");return;}if(amount>row.remaining+0.005){notify("The recorded amount cannot exceed the current unpaid balance of "+money(row.remaining)+".");return;}
+      var fileInput=form.querySelector&&form.querySelector('[name="receiptFile"]'),file=fileInput&&fileInput.files&&fileInput.files[0];if(file&&(!/^image\/(png|jpeg|webp)$/.test(file.type||"")||Number(file.size)>2*1024*1024)){notify("Use a PNG, JPEG or WebP demo image up to 2 MB.");return;}
+      var rawReference=String(v.reference||"").trim();if(!rawReference){notify("Enter a fake demo payment reference.");return;}
+      var payoutId="p-"+Date.now(),maskedReference="••••"+rawReference.slice(-4);
+      if(file&&typeof URL.createObjectURL==="function"){try{app.receiptPreviews[payoutId]=URL.createObjectURL(file);}catch(e){}}
+      app.data.payouts.unshift({id:payoutId,submissionId:s.id,clipperId:s.clipperId,amount:amount,reference:maskedReference,receiptAttached:!!file,recordedAt:today()});
+      addAudit("Manual ledger payment recorded for "+s.clipperName+"; demo reference masked, no transfer made.");save();app.modal="";render();notify("Manual payment record saved; no money moved.");
+    }
+    function handleBonusAllocationSubmit(form,event){
+      event.preventDefault();var v=formValues(form),s=app.data.submissions.find(function(x){return x.id===v.submissionId;}),c=s&&campaign(s.campaignId),pool=c?aggregateBonusPool(c):0,amount=Math.max(0,Number(v.allocationAmount)||0);
+      if(!s||!c||c.bonusAllocation!=="manual"||!pool){notify("There is no earned manual bonus pool to allocate yet.");return;}
+      var already=app.data.bonusAllocations.filter(function(a){return a.campaignId===c.id&&a.submissionId!==s.id;}).reduce(function(t,a){return t+(Number(a.amount)||0);},0);
+      if(amount<=0||already+amount>pool+0.0001){notify("Enter a positive amount no greater than the remaining milestone pool of "+money(Math.max(0,pool-already))+".");return;}
+      app.data.bonusAllocations=app.data.bonusAllocations.filter(function(a){return a.submissionId!==s.id;});
+      app.data.bonusAllocations.push({id:"ba-"+Date.now(),submissionId:s.id,campaignId:c.id,clipperId:s.clipperId,amount:amount,allocatedAt:today()});
+      addAudit(money(amount)+" of the “"+c.name+"” bonus pool allocated to "+s.clipperName+".");save();app.modal="";render();notify("Campaign bonus allocation recorded in the local ledger.");
+    }
+    function handleProfileSubmit(form,event){
+      event.preventDefault();var v=formValues(form),u=currentUser();u.name=v.name.trim();u.handle=v.handle.trim();u.email=v.email.trim();addAudit("Clipper profile updated for "+u.name+".");save();app.modal="";render();notify("Profile saved in this browser.");
+    }
+    function chooseRole(role,requestedId){
+      app.role=role;app.filter="all";app.search="";
+      var chosen=requestedId&&app.data.users.find(function(u){return u.id===requestedId;});
+      if(!chosen)chosen=app.data.users.find(function(u){return role==="admin"?u.role==="admin":role==="clipper"?u.role==="clipper"&&u.status!=="suspended":["business","creator"].indexOf(u.role)>=0;});
+      if(chosen)app.userId=chosen.id;
+      app.view=role==="clipper"?"overview":"overview";render();
+    }
+    function joinCampaign(id){
+      var c=campaign(id);if(!c||c.status!=="live"){notify("Only live campaigns can be joined.");return;}
+      if(!app.data.enrollments.some(function(e){return e.campaignId===id&&e.clipperId===app.userId;})){app.data.enrollments.unshift({campaignId:id,clipperId:app.userId,joinedAt:today()});addAudit(currentUser().name+" joined campaign “"+c.name+"”.");save();}
+      app.view="discover";render();notify("Campaign joined. Submit your published clip when ready.");
+    }
+    function exportCSV(kind){
+      var rows=kind==="insights"?app.data.campaigns.map(function(c){return [c.name,c.owner,c.status,unitLabel(c.rateUnit),c.rate,campaignViews(c),app.data.submissions.filter(function(s){return s.campaignId===c.id;}).reduce(function(t,s){return t+(Number(s.claimedViews)||0);},0)];}):payoutRows().map(function(r){return [r.submission.clipperName,r.submission.handle,r.campaign?r.campaign.name:"",r.base,r.bonus,r.total,r.fullyPaid?"Recorded paid":r.paid>0?"Partially paid":"Unpaid",r.lastReference];});
+      var header=kind==="insights"?["Campaign","Owner","Status","Rate unit","Rate INR","Verified views","Self-reported views"]:["Clipper","Handle","Campaign","Base INR","Bonus INR","Total INR","Status","Payment reference"];
+      var lines=[header].concat(rows).map(function(row){return row.map(function(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n");
+      var blob=new Blob(["\ufeff"+lines],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="clipsetu-"+kind+"-"+today()+".csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);notify("CSV generated from this browser's demo records.");
+    }
+    document.addEventListener("click",function(e){
+      var el=e.target.closest("[data-action]");if(!el)return;var a=el.dataset.action,id=el.dataset.id;
+      if(a==="navigate"){app.view=el.dataset.view;app.search="";app.filter="all";render();}
+      else if(a==="new-campaign")openModal("campaign","");
+      else if(a==="edit-campaign")openModal("campaign",id);
+      else if(a==="new-asset")openModal("asset","");
+      else if(a==="new-user")openModal("register","");
+      else if(a==="new-submission")openModal("submission",el.dataset.campaign||"");
+      else if(a==="edit-payout-method"){if(app.role!=="clipper"){notify("Switch to a clipper demo account to submit a method.");return;}openModal("payout-method","");}
+      else if(a==="approve-payout-method")handlePayoutMethodDecision(id,"approved");
+      else if(a==="reject-payout-method")handlePayoutMethodDecision(id,"rejected");
+      else if(a==="view-payout-proof"){var proof=app.data.payouts.find(function(p){return p.id===id;});if(!proof||(app.role!=="admin"&&!(app.role==="clipper"&&proof.clipperId===app.userId))){notify("This payment proof is not available for this demo role.");return;}app.editingId=id;app.modal="receipt";render();}
+      else if(a==="review")openModal("review",id);
+      else if(a==="toggle-risk"){var riskClip=app.data.submissions.find(function(s){return s.id===id;});if(riskClip){riskClip.risk=!riskClip.risk;addAudit((riskClip.risk?"Fraud / quality review flag added":"Review flag cleared")+" for submission "+riskClip.id+".");save();render();notify(riskClip.risk?"Submission held for additional review.":"Review hold cleared.");}}
+      else if(a==="mark-paid"){if(app.role!=="admin"){notify("Only an admin can record a manual payment.");return;}var r=payoutRows().find(function(x){return x.submission.id===id;});if(!r)return;if(r.submission.risk){notify("Clear the review flag before recording a payout.");return;}if(r.locked){notify("Resolve campaign payout terms first.");return;}if(r.needsAllocation){notify("Allocate the campaign bonus pool first.");return;}var method=payoutMethodFor(r.submission.clipperId);if(!method||method.status!=="approved"){notify("Approve the clipper's payout method first.");return;}app.editingId=id;app.modal="payout";render();var amt=document.querySelector('[name="paidAmount"]');if(amt)amt.value=(r.remaining||0).toFixed(2);}
+      else if(a==="allocate-bonus"){var row=payoutRows().find(function(x){return x.submission.id===id;});if(!row||!row.campaign)return;app.editingId=id;app.modal="allocation";render();}
+      else if(a==="edit-profile")openModal("profile","");
+      else if(a==="open-profile"){if(app.role==="clipper")openModal("profile","");else openModal("register","");}
+      else if(a==="campaign-details")openModal("details",id);
+      else if(a==="join-campaign")joinCampaign(id);
+      else if(a==="filter-submissions"){app.filter=el.dataset.filter;render();}
+      else if(a==="submission-details"){var s=app.data.submissions.find(function(x){return x.id===id;});if(s){notify("Status: "+s.status+". "+(s.reviewNote||"No review note yet."));}}
+      else if(a==="publish-campaign"){openModal("campaign",id);}
+      else if(a==="use-asset"){var x=asset(id);app.modal="campaign";app.editingId="";render();var src=document.querySelector('[name="sourceUrl"]');if(src)src.value=x.url||"";notify("Source link placed in a new campaign form.");}
+      else if(a==="delete-asset"){if(!confirm("Remove this content reference from the demo library?"))return;app.data.assets=app.data.assets.filter(function(x){return x.id!==id;});addAudit("A content reference was removed.");save();render();notify("Content reference removed.");}
+      else if(a==="approve-user"){var u=user(id);if(u){u.status="active";addAudit("Clipper profile "+u.name+" approved.");save();render();notify("Clipper profile approved in demo mode.");}}
+      else if(a==="suspend-user"){var usr=user(id);if(usr){usr.status=usr.status==="suspended"?"active":"suspended";addAudit("Clipper profile "+usr.name+" set to "+usr.status+".");save();render();notify("Profile status updated.");}}
+      else if(a==="set-review-status"){var h=document.getElementById("reviewStatus");if(h)h.value=el.dataset.status;var f=document.getElementById("reviewForm");if(f)f.requestSubmit();}
+      else if(a==="export-payouts")exportCSV("payouts");
+      else if(a==="export-insights")exportCSV("insights");
+      else if(a==="reset-demo"){if(app.role!=="admin"){notify("Only the admin demo role can reset sample data.");return;}if(!confirm("Reset this website's local demo records to their original sample data?"))return;localStorage.removeItem(STORAGE_KEY);app.data=seedState();app.role="admin";app.userId="u-admin";app.view="overview";app.modal="";app.search="";app.filter="all";render();notify("Demo data reset in this browser.");}
+      else if(a==="close-modal")closeModal();
+      else if(a==="backdrop-close"&&e.target===el)closeModal();
+    });
+    document.addEventListener("submit",function(e){
+      if(e.target.id==="campaignForm")handleCampaignSubmit(e.target,e);
+      else if(e.target.id==="assetForm")handleAssetSubmit(e.target,e);
+      else if(e.target.id==="registerForm")handleRegister(e.target,e);
+      else if(e.target.id==="submissionForm")handleSubmissionSubmit(e.target,e);
+      else if(e.target.id==="reviewForm")handleReviewSubmit(e.target,e);
+      else if(e.target.id==="payoutMethodForm")handlePayoutMethodSubmit(e.target,e);
+      else if(e.target.id==="payoutForm")handlePayoutSubmit(e.target,e);
+      else if(e.target.id==="allocationForm")handleBonusAllocationSubmit(e.target,e);
+      else if(e.target.id==="profileForm")handleProfileSubmit(e.target,e);
+    });
+    document.addEventListener("change",function(e){
+      if(e.target.id==="roleSelect"){var parts=e.target.value.split(":");chooseRole(parts[0],parts[1]);}
+      if(e.target.id==="campaignStatusFilter"){var cards=Array.from(document.querySelectorAll(".campaign-card"));cards.forEach(function(card){var badge=card.querySelector(".badge");if(e.target.value==="all"||!badge||badge.textContent.toLowerCase().indexOf(e.target.value)>=0)card.style.display="";else card.style.display="none";});}
+    });
+    document.addEventListener("input",function(e){
+      if(["campaignSearch","assetSearch","submissionSearch","userSearch"].indexOf(e.target.id)>=0){app.search=e.target.value;var start=e.target.selectionStart,end=e.target.selectionEnd,scroll=e.target.scrollTop;render();var next=document.getElementById(e.target.id);if(next){next.focus();next.setSelectionRange(start,end);next.scrollTop=scroll;}}
+    });
+    document.addEventListener("keydown",function(e){if(e.key==="Escape"&&app.modal)closeModal();});
+    render();
+  })();
+  </script>
+</body>
+</html>
