@@ -36,6 +36,24 @@ export async function reviewCampaign(formData: FormData) {
   revalidatePath("/admin"); revalidatePath("/dashboard");
 }
 
+export async function reviewSubmission(formData: FormData) {
+  const supabase = await verifiedAdmin();
+  const submissionId = String(formData.get("submission_id") ?? "");
+  const decision = String(formData.get("decision") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!/^[0-9a-f-]{36}$/i.test(submissionId) || !["under_review", "changes_requested", "accepted", "rejected"].includes(decision)) {
+    throw new Error("Invalid submission review request.");
+  }
+  if (["changes_requested", "rejected"].includes(decision) && !reason) throw new Error("A reason is required for corrections or rejection.");
+  const { error } = await supabase.rpc("admin_review_submission", {
+    p_submission_id: submissionId,
+    p_decision: decision as "under_review" | "changes_requested" | "accepted" | "rejected",
+    p_reason: reason || null,
+  });
+  if (error) throw new Error("Submission review was not saved. It may already have been reviewed.");
+  revalidatePath("/admin"); revalidatePath("/dashboard/submissions"); revalidatePath("/dashboard/campaigns");
+}
+
 export async function reviewRoleRequest(formData: FormData) {
   const supabase = await verifiedAdmin();
   const userId = String(formData.get("user_id") ?? "");

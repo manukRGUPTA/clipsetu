@@ -48,6 +48,14 @@ export default async function DashboardPage() {
       )}
 
       <div className="grid-two">
+        <section className="content-panel workflow-shortcuts" aria-label="Your workflows">
+          <h2>Workflows</h2>
+          <div className="actions">
+            {requestedRole?.role === "business" && <Link className="button button-secondary button-small" href="/dashboard/campaigns">Manage campaigns</Link>}
+            {requestedRole?.role === "clipper" && <><Link className="button button-secondary button-small" href="/campaigns">Discover campaigns</Link><Link className="button button-secondary button-small" href="/dashboard/submissions">My submissions</Link></>}
+            {admin && <Link className="button button-secondary button-small" href="/admin">Review submissions</Link>}
+          </div>
+        </section>
         <section className="content-panel" aria-labelledby="campaign-title">
           <h2 id="campaign-title">Campaigns</h2>
           <p>Only persisted campaign records visible to your account are shown.</p>
