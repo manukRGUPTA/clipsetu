@@ -11,6 +11,7 @@ The existing browser demo is preserved at `/demo/index.html`. Its local-storage 
 - Region: Mumbai (`ap-south-1`)
 - Project reference: `wayioohkksqdcykefief`
 - The additive schema/auth migration and the policy-hardening migration under `supabase/migrations/` are both tracked and applied to this new project.
+- Email/password auth is enabled with email confirmation required, a 12-character password minimum, TOTP enrollment/verification, and refresh-token rotation. The current Auth Site URL is `http://localhost:3000`; no preview redirect has been allowlisted yet. Add the exact preview URL in Supabase Auth URL Configuration before testing email callbacks on a Vercel preview.
 - Only the public publishable/anon key belongs in browser configuration. Service-role and database credentials must never be committed or bundled.
 
 The Free plan currently creates no additional paid subscription charge. It has plan limits and does not imply backups, an SLA, or escrow. Verify the active Supabase billing page before enabling paid resources or changing plans.
