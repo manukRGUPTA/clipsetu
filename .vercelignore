@@ -1,4 +1,6 @@
-README.md
+.git
+.vercel
 .gitignore
+README.md
 .vercelignore
 tests/
