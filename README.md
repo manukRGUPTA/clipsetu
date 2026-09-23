@@ -10,7 +10,7 @@ The existing browser demo is preserved at `/demo/index.html`. Its local-storage 
 - Project: `clipsetu`
 - Region: Mumbai (`ap-south-1`)
 - Project reference: `wayioohkksqdcykefief`
-- The additive schema/auth migration and the policy-hardening migration under `supabase/migrations/` are both tracked and applied to this new project.
+- The four additive migrations under `supabase/migrations/` (core schema/auth, policy hardening, campaign/submission workflows, and workflow access hardening) are tracked and applied to this project.
 - Email/password auth is enabled with email confirmation required, a 12-character password minimum, TOTP enrollment/verification, and refresh-token rotation. The current Auth Site URL is `http://localhost:3000`; no preview redirect has been allowlisted yet. Add the exact preview URL in Supabase Auth URL Configuration before testing email callbacks on a Vercel preview.
 - Only the public publishable/anon key belongs in browser configuration. Service-role and database credentials must never be committed or bundled.
 
@@ -53,12 +53,12 @@ npm run typecheck
 npm run build
 ```
 
-The tests check the existing demo safety/CSP, migration RLS coverage, campaign join-mode enforcement, campaign-bound submissions, receipt-upload restrictions, public role assignment limits, MFA-aware admin functions, and client/server key boundaries. A successful build does not by itself establish production readiness; authenticated session-isolation, tenant-boundary, concurrency, account-recovery, upload, and payment tests remain required.
+The tests check the existing demo safety/CSP, INR-to-paise and IST conversion, HTTPS/platform validation, migration RLS coverage, campaign join-mode enforcement, campaign-bound submissions, receipt-upload restrictions, public role assignment limits, MFA-aware admin functions, and client/server key boundaries. A successful build does not by itself establish production readiness; authenticated session-isolation, tenant-boundary, concurrency, account-recovery, upload, and payment tests remain required.
 
 ## Current scope and limitations
 
-This branch establishes the first authenticated vertical slice: email signup/login, email callback, persisted profiles/role requests, business and clipper onboarding, an RLS-scoped dashboard, MFA-gated business/campaign review, and database models/policies for submissions, view reports, ledger entries, and payouts. The admin identity still requires the explicit bootstrap step above.
+The authenticated campaign/submission vertical slice now includes business campaign drafts with append-only versioned terms, review submission, admin publish/change/reject decisions, clipper discovery filters, open or approval-based joining, business decisions on join requests, unique published-post submissions, correction resubmission, and MFA-gated admin review. Campaign and submission writes use guarded, audited database functions; current campaign terms are snapshotted onto each submission. The isolated browser demo remains unchanged. The admin identity still requires the explicit bootstrap step above.
 
-Campaign creation/discovery, clip submission/review UI, cumulative-view review UI, reward calculation and idempotent payout transactions, complete private file download flows, recovery/retention operations, and verified tenant-isolation E2E tests are not complete. Do not label the app production-ready or accept real payout details until those paths are implemented and tested.
+Authenticated cross-user/RLS session tests have not run because dedicated test accounts are not configured. Accepted submissions currently record a review decision only; they do not post earnings or move money. Cumulative-view review UI, reward calculation and idempotent payout transactions, complete private file download flows, recovery/retention operations, backup/restore verification, and verified tenant-isolation E2E tests remain incomplete. Do not label the app production-ready or accept real payout details until those paths are implemented and tested.
 
 The existing Vercel production aliases must remain unchanged. Preview deployments only; a deployment URL must be tied to the pushed commit before it is described as verified.
