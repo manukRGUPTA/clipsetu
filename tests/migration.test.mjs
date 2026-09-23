@@ -4,6 +4,8 @@ import test from "node:test";
 
 const sql = fs.readFileSync(new URL("../supabase/migrations/20260923090000_clipsetu_auth_core.sql", import.meta.url), "utf8");
 const hardening = fs.readFileSync(new URL("../supabase/migrations/20260923093000_clipsetu_policy_hardening.sql", import.meta.url), "utf8");
+const workflows = fs.readFileSync(new URL("../supabase/migrations/20260923100000_campaign_submission_flows.sql", import.meta.url), "utf8");
+const workflowAccess = fs.readFileSync(new URL("../supabase/migrations/20260923101000_campaign_submission_access.sql", import.meta.url), "utf8");
 
 test("the first migration is additive and contains no destructive schema operations", () => {
   assert.doesNotMatch(sql, /\bdrop\s+(table|schema|database|type|trigger)\b/i);
@@ -64,4 +66,23 @@ test("only an MFA admin can upload receipts for an existing paid payout, and neg
   assert.match(hardening, /payout_receipt_upload_admin_paid_request[\s\S]*?private\.is_admin\(\)[\s\S]*?r\.status = 'paid'/i);
   assert.match(hardening, /admin_review_business[\s\S]*?p_decision in \('rejected', 'suspended'\)[\s\S]*?coalesce\(trim\(p_reason\), ''\) = ''/i);
   assert.match(hardening, /admin_set_user_role[\s\S]*?p_status in \('rejected', 'suspended'\)[\s\S]*?coalesce\(trim\(p_reason\), ''\) = ''/i);
+});
+
+test("campaign and submission workflow migration is additive and preserves terms history", () => {
+  assert.doesNotMatch(workflows, /\bdrop\s+(table|schema|database|type|trigger)\b/i);
+  assert.doesNotMatch(workflows, /\btruncate\s+table\b/i);
+  assert.match(workflows, /public\.save_campaign_draft\([\s\S]*?security definer[\s\S]*?private\.has_role\('business', 'active'\)/i);
+  assert.match(workflows, /insert into public\.campaign_terms[\s\S]*?max\(t\.version\), 0\) \+ 1/i);
+  assert.match(workflows, /'terms_version', coalesce\(v_version, 1\)[\s\S]*?'terms', coalesce\(v_terms/i);
+  assert.match(workflows, /public\.join_campaign\([\s\S]*?private\.has_role\('clipper', 'active'\)[\s\S]*?c\.join_mode = 'open'/i);
+  assert.match(workflows, /public\.business_decide_participation\([\s\S]*?b\.owner_id = auth\.uid\(\)[\s\S]*?status = 'requested'/i);
+  assert.match(workflows, /public\.submit_clip\([\s\S]*?private\.has_role\('clipper', 'active'\)[\s\S]*?campaign_participants[\s\S]*?status = 'active'/i);
+  assert.match(workflows, /revoke insert \(campaign_id, clipper_id, source_url, published_url, platform, published_at, notes\) on public\.submissions from authenticated/i);
+  assert.match(workflows, /revoke insert \(campaign_id, version, terms, created_by\) on public\.campaign_terms from authenticated/i);
+  assert.match(workflows, /profiles_read_campaign_participants/);
+  assert.match(workflows, /submission_reviews_read_involved/);
+  assert.match(workflowAccess, /grant execute on function public\.submit_clip\([\s\S]*?to authenticated/i);
+  assert.match(workflowAccess, /revoke insert \(campaign_id, clipper_id, source_url, published_url, platform, published_at, notes\) on public\.submissions from authenticated/i);
+  assert.match(workflowAccess, /published_campaign_business_directory[\s\S]*?select distinct b\.id, b\.company_name/i);
+  assert.doesNotMatch(workflowAccess, /\bdrop\s+(table|schema|database|type|trigger)\b/i);
 });
