@@ -23,6 +23,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <span>clipsetu</span>
           </Link>
           <nav aria-label="Main navigation" className="header-nav">
+            <Link href="/campaigns">Campaigns</Link>
+            <Link href="/dashboard">Dashboard</Link>
             <Link href="/sign-in">Sign in</Link>
             <Link className="button button-small" href="/sign-in?mode=signup">Get started</Link>
           </nav>
